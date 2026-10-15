@@ -51,6 +51,13 @@ public final class Quality {
 	/** The flat toughness modifier for armour that has no toughness modifier of its own. */
 	public static final Identifier TOUGHNESS_ID = Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "toughness");
 
+	/**
+	 * Mods whose own quality bonuses arrive as extra attribute modifiers on the item. Those are
+	 * left exactly as they are: Forgemark's percentages apply to the item's own modifiers only,
+	 * so the two systems sit side by side and never multiply each other.
+	 */
+	public static final List<String> OTHER_QUALITY_MODS = List.of("apotheosis", "tiered");
+
 	private static @Nullable Boolean otherQualityModInstalled;
 
 	private Quality() {
@@ -68,7 +75,7 @@ public final class Quality {
 
 	private static boolean otherQualityModInstalled() {
 		if (otherQualityModInstalled == null) {
-			otherQualityModInstalled = Services.PLATFORM.isModLoaded("tiered") || Services.PLATFORM.isModLoaded("apotheosis");
+			otherQualityModInstalled = OTHER_QUALITY_MODS.stream().anyMatch(Services.PLATFORM::isModLoaded);
 		}
 		return otherQualityModInstalled;
 	}
@@ -114,7 +121,7 @@ public final class Quality {
 	 * own 1), so "+8%" means what a player reads. Toughness is flat.
 	 */
 	public static AttributeModifier adjust(Temper temper, Holder<Attribute> attribute, AttributeModifier modifier) {
-		if (modifier.operation() != AttributeModifier.Operation.ADD_VALUE) {
+		if (modifier.operation() != AttributeModifier.Operation.ADD_VALUE || OTHER_QUALITY_MODS.contains(modifier.id().getNamespace())) {
 			return modifier;
 		}
 		if (is(attribute, Attributes.ATTACK_DAMAGE) && modifier.amount() > 0) {

@@ -24,6 +24,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -203,6 +204,29 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				.build());
 		check(near(modifierTotal(bare, EquipmentSlot.HEAD, Attributes.ARMOR_TOUGHNESS), 0.4), "armour with no toughness modifier at all gets one added");
 		check(near(modifierTotal(bare, EquipmentSlot.HEAD, Attributes.ARMOR_TOUGHNESS, EquipmentSlotGroup.HEAD), 0.4), "...in the tooltip's walk too");
+
+		// Another quality mod's bonus on the same item (an Apotheosis affix, made by hand): left exactly as it is.
+		ItemStack affixed = tempered(Items.DIAMOND_SWORD, Temper.of(Tier.MASTERWORK, true, null));
+		ItemAttributeModifiers own = affixed.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+		ItemAttributeModifiers.Builder withAffix = ItemAttributeModifiers.builder();
+		own.modifiers().forEach(entry -> withAffix.add(entry.attribute(), entry.modifier(), entry.slot()));
+		withAffix.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Identifier.fromNamespaceAndPath("apotheosis", "test_affix"), 3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+		withAffix.add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(Identifier.fromNamespaceAndPath("tiered", "test_bonus"), 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+		affixed.set(DataComponents.ATTRIBUTE_MODIFIERS, withAffix.build());
+		check(near(modifierAmount(affixed, EquipmentSlot.MAINHAND, "apotheosis:test_affix"), 3) && near(modifierAmount(affixed, EquipmentSlot.MAINHAND, "tiered:test_bonus"), 1),
+				"another quality mod's own modifiers aren't multiplied by the temper (got " + modifierAmount(affixed, EquipmentSlot.MAINHAND, "apotheosis:test_affix") + ")");
+		check(near(modifierTotal(affixed, EquipmentSlot.MAINHAND, Attributes.ATTACK_DAMAGE), 9.7), "...while the sword's own damage still gets its bonus (6.7 + 3 = 9.7)");
+	}
+
+	/** One modifier's amount as the game applies it when equipped, found by its id. */
+	private static double modifierAmount(ItemStack stack, EquipmentSlot slot, String id) {
+		double[] amount = {Double.NaN};
+		stack.forEachModifier(slot, (a, modifier) -> {
+			if (modifier.id().toString().equals(id)) {
+				amount[0] = modifier.amount();
+			}
+		});
+		return amount[0];
 	}
 
 	/** The water quench and the bonus-scale and maximum-tier settings. */

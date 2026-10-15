@@ -58,7 +58,8 @@ registrations in its registry event, so its `Platform` queues them and the resul
   whenever they're needed, so a netherite upgrade or a changed setting is always right. Never
   save stat numbers on the item.
 - **Caps, quench included:** +15% durability, +10% mining speed, +10% attack damage, +0.5 armour
-  toughness (flat). Exact steps per tier are in the design doc.
+  toughness (flat). Exact steps per tier are in the design doc. Modifiers whose id is in another
+  quality mod's namespace (`Quality.OTHER_QUALITY_MODS`: apotheosis, tiered) are never scaled.
 - **Never change an item's rarity or name.** The tier shows in Forgemark's own tooltip line, so
   tooltip mods that style by rarity keep working.
 - **Matching:** the ingot is whatever repairs the item: its `repairable` data, which is often a

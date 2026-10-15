@@ -18,12 +18,15 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -67,6 +70,7 @@ final class ForgeTest {
 			hearth(level, player);
 			anvil(level, player);
 			settings(level, player);
+			beyondTheDragon(level, player);
 			// Leave a session running for the screenshot and the reopen: item and hot ingot on the anvil, two strikes in.
 			ForgingAnvilBlockEntity anvil = anvil(level);
 			anvil.placeItem(new ItemStack(Items.IRON_SWORD));
@@ -360,6 +364,31 @@ final class ForgeTest {
 	}
 
 	/**
+	 * With Beyond the Dragon installed (-PtestBeyondTheDragon): aphelite gear, repaired through
+	 * that mod's own tag and with its ingot in no shared tag, tempers like netherite gear. The
+	 * items are looked up by id, since the test never compiles against the mod.
+	 */
+	private void beyondTheDragon(ServerLevel level, ServerPlayer player) {
+		if (!FabricLoader.getInstance().isModLoaded("beyond_the_dragon")) {
+			return;
+		}
+		Item ingotItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_ingot"));
+		Item swordItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_sword"));
+		ItemStack ingot = new ItemStack(ingotItem);
+		ItemStack sword = new ItemStack(swordItem);
+		check.accept(!sword.is(Items.AIR) && !ingot.is(Items.AIR), "Beyond the Dragon's aphelite sword and ingot are there");
+		check.accept(Metal.isHeatable(ingot) && Metal.heatTicks(ingot) == Metal.SLOW_HEAT_TICKS && Metal.strikesPerHeat(ingot) == Metal.HARD_STRIKES_PER_HEAT,
+				"an aphelite ingot heats slowly and is good for four strikes, like netherite");
+		check.accept(Quality.isTemperable(sword) && sword.isValidRepairItem(ingot) && !sword.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT)),
+				"an aphelite sword can be tempered and asks for aphelite, not netherite");
+		int base = sword.getMaxDamage();
+		check.accept(forge(level, player, sword, ingotItem, 5, 0, 0) == Tier.MASTERWORK, "five perfect strikes with aphelite make it Masterwork");
+		check.accept(sword.getMaxDamage() == Math.round(base * 1.15F), "...with +15% durability worked out from aphelite's own " + base + " (got " + sword.getMaxDamage() + ")");
+		ItemStack pickaxe = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_pickaxe")));
+		check.accept(forge(level, player, pickaxe, ingotItem, 0, 5, 0) == Tier.FINE, "five good strikes make an aphelite pickaxe Fine");
+	}
+
+	/**
 	 * Lines the server's own marker up with the zone centre, as a well-timed player would. The
 	 * server samples the marker on whole ticks, so it lands within 0.025 of the centre; returns
 	 * where it actually is, which is what a report has to be close to.
@@ -384,7 +413,7 @@ final class ForgeTest {
 		return forge(level, player, item, Items.IRON_INGOT, perfect, good, miss);
 	}
 
-	private Tier forge(ServerLevel level, ServerPlayer player, ItemStack item, net.minecraft.world.item.Item ingot, int perfect, int good, int miss) {
+	private Tier forge(ServerLevel level, ServerPlayer player, ItemStack item, Item ingot, int perfect, int good, int miss) {
 		ForgingAnvilBlockEntity anvil = anvil(level);
 		if (!player.getMainHandItem().is(ForgemarkBlocks.SMITHING_HAMMER.get())) {
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get()));

@@ -35,8 +35,10 @@ registrations in its registry event, so its `Platform` queues them and the resul
 - `./gradlew :fabric:runClientGameTest`: the in-game checks in a real game window. Tempering runs
   through every tier on vanilla gear, then saves, reloads and checks the tier is still there.
   Add `-PtestX` flags to play it with another mod installed (fetched from Modrinth's maven, never
-  bundled), the same way Beyond the Dragon does: `-PtestJade` today. Planned: Mythic Metals
-  (once it's on 26.3), Beyond the Dragon (aphelite gear, once it's on 26.3), Tiered.
+  bundled), the same way Beyond the Dragon does. `-PtestBeyondTheDragon` takes that mod's jar
+  from its GitHub release through an ivy repository in `fabric/build.gradle`
+  (`beyond_the_dragon_version` is the release tag without the `v`); its checks look items up by
+  id and skip when the mod is absent. Planned: Mythic Metals (once it's on 26.3), Tiered.
 - Jade, JEI and REI are compile-only dependencies on all three projects (`*_version` in
   `gradle.properties` are Modrinth version ids; REI also needs architectury, cloth-config and
   cloth's `basic-math` from shedaniel's maven). The plugins are `common/.../compat/*Plugin`:

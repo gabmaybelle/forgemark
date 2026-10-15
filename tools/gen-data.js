@@ -26,11 +26,11 @@ write('data/forgemark/tags/item/heats_quickly.json', {
 	values: ['minecraft:gold_ingot', 'minecraft:copper_ingot', optional('#c:ingots/gold'), optional('#c:ingots/copper'), optional('#c:ingots/tin'), optional('#c:ingots/silver')],
 });
 write('data/forgemark/tags/item/heats_slowly.json', {
-	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel')],
+	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel'), optional('beyond_the_dragon:aphelite_ingot')],
 });
 write('data/forgemark/tags/item/soft_metal.json', { values: ['minecraft:gold_ingot', optional('#c:ingots/gold')] });
 write('data/forgemark/tags/item/hard_metal.json', {
-	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel')],
+	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel'), optional('beyond_the_dragon:aphelite_ingot')],
 });
 
 // Blocks and items: states, models, item definitions, loot, recipes.

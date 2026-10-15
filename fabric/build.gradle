@@ -17,6 +17,27 @@ loom {
 	}
 }
 
+repositories {
+	// Beyond the Dragon isn't on Modrinth; its release jars live on GitHub. Only the
+	// -PtestBeyondTheDragon run asks for one.
+	exclusiveContent {
+		forRepository {
+			ivy {
+				url = 'https://github.com/gabmaybelle/beyond-the-dragon/releases/download/'
+				patternLayout {
+					artifact 'v[revision]/[artifact]-[revision].jar'
+				}
+				metadataSources {
+					artifact()
+				}
+			}
+		}
+		filter {
+			includeGroup 'github.gabmaybelle'
+		}
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -36,12 +57,15 @@ dependencies {
 	// Compatibility runs: `./gradlew :fabric:runClientGameTest -PtestX` plays the in-game test
 	// with another mod installed, fetched from Modrinth's maven by version id (see
 	// gradle.properties). Nothing here is bundled or required. Planned: Beyond the Dragon
-	// (aphelite gear, once it reaches 26.3), Mythic Metals once it reaches 26.3, Tiered.
+	// Beyond the Dragon (its GitHub release, see above), Mythic Metals once it reaches 26.3, Tiered.
 	if (project.hasProperty("testJade")) {
 		runtimeOnly "maven.modrinth:jade:${project.jade_fabric_version}"
 	}
 	if (project.hasProperty("testJei")) {
 		runtimeOnly "maven.modrinth:jei:${project.jei_fabric_version}"
+	}
+	if (project.hasProperty("testBeyondTheDragon")) {
+		runtimeOnly "github.gabmaybelle:beyond-the-dragon-fabric:${project.beyond_the_dragon_version}"
 	}
 	if (project.hasProperty("testEasyAnvils")) {
 		runtimeOnly "maven.modrinth:easy-anvils:${project.easy_anvils_fabric_version}"

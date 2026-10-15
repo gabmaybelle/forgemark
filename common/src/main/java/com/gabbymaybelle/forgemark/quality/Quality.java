@@ -15,13 +15,17 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
+import net.minecraft.world.item.enchantment.Repairable;
 import org.apache.commons.lang3.function.TriConsumer;
 import org.jspecify.annotations.Nullable;
 
@@ -166,6 +170,28 @@ public final class Quality {
 		return attribute.value() == wanted.value();
 	}
 
+	/**
+	 * A hit on a player with the affect-PvP setting off: the weapon's temper bonus comes back
+	 * out. Only the attribute part is known here, so crits and enchantments on top of it stay.
+	 */
+	public static float pvpDamage(DamageSource source, float damage) {
+		if (Config.affectPvp || !(source.getEntity() instanceof Player attacker)) {
+			return damage;
+		}
+		ItemStack weapon = attacker.getMainHandItem();
+		Temper temper = Temper.on(weapon);
+		if (temper == null) {
+			return damage;
+		}
+		double[] bonus = {0};
+		weapon.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+			if (is(attribute, Attributes.ATTACK_DAMAGE)) {
+				bonus[0] += adjust(temper, attribute, modifier).amount() - modifier.amount();
+			}
+		});
+		return (float) Math.max(0.0, damage - bonus[0]);
+	}
+
 	// What kind of item it is
 
 	/**
@@ -216,7 +242,11 @@ public final class Quality {
 	 * too, but it's a tool, and "weapons" means swords, tridents, maces and the like.
 	 */
 	public static boolean isTemperable(ItemStack stack) {
-		if (stack.isEmpty() || !stack.has(DataComponents.MAX_DAMAGE) || !stack.has(DataComponents.REPAIRABLE) || stack.is(ForgemarkTags.NOT_TEMPERABLE)) {
+		if (stack.isEmpty() || !stack.has(DataComponents.MAX_DAMAGE) || stack.is(ForgemarkTags.NOT_TEMPERABLE)) {
+			return false;
+		}
+		Repairable repairable = stack.get(DataComponents.REPAIRABLE);
+		if (repairable == null || repairable.items().stream().noneMatch(material -> material.is(ForgemarkTags.HEATABLE))) {
 			return false;
 		}
 		if (isTool(stack)) {

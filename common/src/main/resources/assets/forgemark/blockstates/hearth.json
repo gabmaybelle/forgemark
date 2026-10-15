@@ -1,0 +1,10 @@
+{
+	"variants": {
+		"lit=false": {
+			"model": "forgemark:block/hearth"
+		},
+		"lit=true": {
+			"model": "forgemark:block/hearth"
+		}
+	}
+}

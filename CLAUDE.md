@@ -76,9 +76,19 @@ registrations in its registry event, so its `Platform` queues them and the resul
   vanilla file in the merged jar before writing a new kind of data file.
 - Decompiled 26.3 sources (for reading vanilla, not for copying): ModDevGradle leaves them in
   `~/.gradle/caches/neoformruntime/intermediate_results/mergeWithSources_*_output.jar`.
-- **One client game test at a time on this machine.** With another mod's game test running at the
-  same time, Fabric's test harness can deadlock at the title screen (the test thread never starts
-  and the window goes "not responding"). Wait for the other run to finish, then run again.
+- **Never teleport the player server-side in the client game test.** After a
+  `ServerPlayer.teleportTo(...)`, closing the world deadlocks (render thread halting the server,
+  server thread at the harness's tick barrier, test thread waiting on both). Build what the test
+  needs in front of where the player already stands, and turn the view with `ctx.runOnClient`.
+  Many strikes or finishes in one tick also pile up their particles in the screenshot.
+- **One client game test at a time on this machine, and only when it's quiet.** With another
+  mod's game test or a heavy build running at the same time, Fabric's test harness can deadlock:
+  at the title screen (the test thread never starts) or when a world closes (26.3's integrated
+  server halts with a blocking call the harness doesn't cover, so it only works when the
+  client's disconnect lands while the server thread is still mid-tick). Either way the window
+  goes "not responding" and the log falls silent. Stop the game (`Stop-Process` on the java
+  process whose command line has `forgemark` and `client.gametest`), wait for the other work to
+  finish, and run again. It's timing, not the mod.
 
 ## Working on Gabby's mods (the same in every repo)
 

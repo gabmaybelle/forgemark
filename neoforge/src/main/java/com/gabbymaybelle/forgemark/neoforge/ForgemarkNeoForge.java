@@ -3,7 +3,9 @@ package com.gabbymaybelle.forgemark.neoforge;
 import com.gabbymaybelle.forgemark.Config;
 import com.gabbymaybelle.forgemark.Forgemark;
 import com.gabbymaybelle.forgemark.ForgemarkCommands;
+import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlockEntity;
 import com.gabbymaybelle.forgemark.network.SettingsPayload;
+import com.gabbymaybelle.forgemark.network.StrikePayload;
 import com.gabbymaybelle.forgemark.platform.Services;
 import com.gabbymaybelle.forgemark.quality.Temper;
 import net.minecraft.core.component.DataComponents;
@@ -33,7 +35,12 @@ public class ForgemarkNeoForge {
 		modBus.addListener(RegisterEvent.class, platform::onRegister);
 		modBus.addListener(BuildCreativeModeTabContentsEvent.class, platform::onCreativeTab);
 		modBus.addListener(RegisterPayloadHandlersEvent.class, event -> event.registrar("1")
-				.playToClient(SettingsPayload.TYPE, SettingsPayload.STREAM_CODEC, (payload, context) -> Config.applyFromServer(payload)));
+				.playToClient(SettingsPayload.TYPE, SettingsPayload.STREAM_CODEC, (payload, context) -> Config.applyFromServer(payload))
+				.playToServer(StrikePayload.TYPE, StrikePayload.STREAM_CODEC, (payload, context) -> {
+					if (context.player() instanceof ServerPlayer player) {
+						ForgingAnvilBlockEntity.handleStrike(player, payload);
+					}
+				}));
 		// The temper's own tooltip lines, just above the enchantments.
 		modBus.addListener(RegisterTooltipAppendersEvent.class, event -> event.registerComponentAppenderBefore(
 				Temper.type(), DataComponents.ENCHANTMENTS, TooltipAppender.createComponentAppender(Temper.type())));

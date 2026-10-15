@@ -1,0 +1,17 @@
+{
+	"values": [
+		"minecraft:iron_ingot",
+		"minecraft:gold_ingot",
+		"minecraft:copper_ingot",
+		"minecraft:netherite_ingot",
+		"minecraft:diamond",
+		{
+			"id": "#c:ingots",
+			"required": false
+		},
+		{
+			"id": "#c:gems",
+			"required": false
+		}
+	]
+}

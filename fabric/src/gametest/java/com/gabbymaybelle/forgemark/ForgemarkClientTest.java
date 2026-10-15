@@ -56,6 +56,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 	/** Where the tempered pickaxe sits in the player's inventory across the save and reopen. */
 	private static final int SAVED_SLOT = 9;
 	private final List<String> failures = new ArrayList<>();
+	private final ForgeTest forge = new ForgeTest(this::check);
 
 	@Override
 	public void runTest(ClientGameTestContext ctx) {
@@ -77,16 +78,20 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				grindstone(server);
 				netheriteUpgrade(server);
 				command(server);
+			});
+			ctx.takeScreenshot("forgemark_in_world");
+			forge.run(ctx, world);
+			world.getServer().runOnServer(server -> {
 				ItemStack keepsake = new ItemStack(Items.DIAMOND_PICKAXE);
 				Temper.put(keepsake, Temper.of(Tier.MASTERWORK, true, "Gabby"));
 				player(server).getInventory().setItem(SAVED_SLOT, keepsake);
 			});
-			ctx.takeScreenshot("forgemark_in_world");
 			save = world.getWorldSave();
 		}
 		try (TestSingleplayerContext world = save.open()) {
 			world.getConnection().waitForChunksRender();
 			world.getServer().runOnServer(server -> {
+				forge.afterReopen(server);
 				ItemStack keepsake = player(server).getInventory().getItem(SAVED_SLOT);
 				Temper temper = Temper.on(keepsake);
 				check(keepsake.is(Items.DIAMOND_PICKAXE) && temper != null && temper.tier() == Tier.MASTERWORK && temper.quenched()
@@ -230,6 +235,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				"tools, weapons and armour can be tempered");
 		check(!Quality.isTemperable(new ItemStack(Items.STICK)) && !Quality.isTemperable(new ItemStack(Items.ENCHANTED_BOOK)), "things that don't wear out can't");
 		check(!Quality.isTemperable(new ItemStack(Items.ELYTRA)) && !Quality.isTemperable(new ItemStack(Items.BOW)), "elytra and bows wait for a later version");
+		check(!Quality.isTemperable(new ItemStack(Items.LEATHER_CHESTPLATE)), "leather armour can't: nothing to heat");
 		Config.eligibleItems = "weapons";
 		check(!Quality.isTemperable(new ItemStack(Items.DIAMOND_PICKAXE)) && Quality.isTemperable(new ItemStack(Items.IRON_SWORD)),
 				"the eligible-items setting narrows it down");
@@ -342,7 +348,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		return Math.abs(actual - expected) < 0.001;
 	}
 
-	private void check(boolean ok, String what) {
+	void check(boolean ok, String what) {
 		if (ok) {
 			Forgemark.LOGGER.info("[test] ok: {}", what);
 		} else {

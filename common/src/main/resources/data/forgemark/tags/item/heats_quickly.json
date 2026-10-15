@@ -1,0 +1,22 @@
+{
+	"values": [
+		"minecraft:gold_ingot",
+		"minecraft:copper_ingot",
+		{
+			"id": "#c:ingots/gold",
+			"required": false
+		},
+		{
+			"id": "#c:ingots/copper",
+			"required": false
+		},
+		{
+			"id": "#c:ingots/tin",
+			"required": false
+		},
+		{
+			"id": "#c:ingots/silver",
+			"required": false
+		}
+	]
+}

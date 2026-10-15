@@ -3,8 +3,10 @@
 	"package": "com.gabbymaybelle.forgemark.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"AbstractCauldronBlockMixin",
 		"AnvilMenuMixin",
-		"ItemStackMixin"
+		"ItemStackMixin",
+		"PlayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

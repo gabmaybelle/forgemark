@@ -1,0 +1,8 @@
+{
+	"parent": "minecraft:block/template_anvil",
+	"textures": {
+		"particle": "forgemark:block/forging_anvil",
+		"body": "forgemark:block/forging_anvil",
+		"top": "forgemark:block/forging_anvil_top"
+	}
+}

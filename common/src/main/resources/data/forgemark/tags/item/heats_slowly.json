@@ -1,0 +1,22 @@
+{
+	"values": [
+		"minecraft:netherite_ingot",
+		"minecraft:diamond",
+		{
+			"id": "#c:ingots/netherite",
+			"required": false
+		},
+		{
+			"id": "#c:gems/diamond",
+			"required": false
+		},
+		{
+			"id": "#c:ingots/steel",
+			"required": false
+		},
+		{
+			"id": "#c:ingots/adamantite",
+			"required": false
+		}
+	]
+}

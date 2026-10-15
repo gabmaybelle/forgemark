@@ -1,0 +1,381 @@
+package com.gabbymaybelle.forgemark;
+
+import com.gabbymaybelle.forgemark.forge.ForgemarkBlocks;
+import com.gabbymaybelle.forgemark.forge.Forging;
+import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlockEntity;
+import com.gabbymaybelle.forgemark.forge.Glowing;
+import com.gabbymaybelle.forgemark.forge.Heat;
+import com.gabbymaybelle.forgemark.forge.HearthBlock;
+import com.gabbymaybelle.forgemark.forge.HearthBlockEntity;
+import com.gabbymaybelle.forgemark.forge.Metal;
+import com.gabbymaybelle.forgemark.quality.Quality;
+import com.gabbymaybelle.forgemark.quality.Temper;
+import com.gabbymaybelle.forgemark.quality.Tier;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * The forge in a real world: the hearth over a campfire, the anvil, the hammer, the strikes
+ * (decided on the server), the quench in a cauldron, and the settings around them. Called from
+ * {@link ForgemarkClientTest}; the {@code check} it's given collects failures there.
+ */
+final class ForgeTest {
+	private final BiConsumer<Boolean, String> check;
+	private BlockPos hearthPos;
+	private BlockPos anvilPos;
+	private BlockPos cauldronPos;
+
+	ForgeTest(BiConsumer<Boolean, String> check) {
+		this.check = check;
+	}
+
+	/** Builds the forge next to the player and plays through it on the server thread. */
+	void run(ClientGameTestContext ctx, TestSingleplayerContext world) {
+		world.getServer().runOnServer(server -> {
+			ServerLevel level = server.overworld();
+			ServerPlayer player = server.getPlayerList().getPlayers().getFirst();
+			BlockPos base = player.blockPosition();
+			// South of the player, which is where a new world's player faces: the anvil straight ahead.
+			hearthPos = base.offset(2, 0, 3);
+			anvilPos = base.offset(0, 0, 3);
+			cauldronPos = base.offset(-2, 0, 3);
+			level.setBlock(hearthPos.below(), Blocks.CAMPFIRE.defaultBlockState(), 3);
+			level.setBlock(hearthPos, ForgemarkBlocks.HEARTH.get().defaultBlockState(), 3);
+			level.setBlock(anvilPos.below(), Blocks.STONE.defaultBlockState(), 3);
+			level.setBlock(anvilPos, ForgemarkBlocks.FORGING_ANVIL.get().defaultBlockState(), 3);
+			level.setBlock(cauldronPos.below(), Blocks.STONE.defaultBlockState(), 3);
+			level.setBlock(cauldronPos, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), 3);
+			hearth(level);
+			anvil(level, player);
+			settings(level, player);
+			// Leave a session running for the screenshot and the reopen: item and hot ingot on the anvil, two strikes in.
+			ForgingAnvilBlockEntity anvil = anvil(level);
+			anvil.placeItem(new ItemStack(Items.IRON_SWORD));
+			anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get()));
+			aim(level, anvil);
+			anvil.strike(player, anvil.getZoneCenter());
+			anvil.strike(player, goodNear(aim(level, anvil)));
+		});
+		ctx.waitTicks(5);
+		// The client owns its own view: face south and a little down, onto the anvil three blocks away.
+		ctx.runOnClient(client -> {
+			if (client.player != null) {
+				client.player.setYRot(0.0F);
+				client.player.setXRot(20.0F);
+				client.player.yRotO = 0.0F;
+				client.player.xRotO = 20.0F;
+			}
+		});
+		ctx.waitTicks(10);
+		boolean lookingAtAnvil = ctx.computeOnClient(client -> client.hitResult instanceof BlockHitResult hit && hit.getBlockPos().equals(anvilPos)
+				&& client.level != null && client.level.getBlockEntity(anvilPos) instanceof ForgingAnvilBlockEntity anvil && anvil.canStrike() && anvil.getStrikes().size() == 2);
+		check.accept(lookingAtAnvil, "the client sees the anvil mid-session (the strike bar is drawn in the screenshot)");
+		ctx.takeScreenshot("forgemark_strike_bar");
+	}
+
+	/** After the world is reopened: the anvil still holds the session. */
+	void afterReopen(MinecraftServer server) {
+		ForgingAnvilBlockEntity anvil = anvil(server.overworld());
+		check.accept(anvil.getItem().is(Items.IRON_SWORD) && anvil.getIngot().is(Items.IRON_INGOT) && anvil.getStrikes().size() == 2,
+				"the anvil keeps its item, ingot and strikes through a save and reopen");
+	}
+
+	private HearthBlockEntity hearth(ServerLevel level, BlockPos pos) {
+		return (HearthBlockEntity) level.getBlockEntity(pos);
+	}
+
+	private ForgingAnvilBlockEntity anvil(ServerLevel level) {
+		return (ForgingAnvilBlockEntity) level.getBlockEntity(anvilPos);
+	}
+
+	/** An ingot straight from a hot hearth. */
+	private ItemStack hotIngot(ServerLevel level, net.minecraft.world.item.Item item) {
+		HearthBlockEntity hearth = hearth(level, hearthPos);
+		hearth.insert(new ItemStack(item));
+		for (int i = 0; i < Metal.SLOW_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		return hearth.takeOut();
+	}
+
+	private void hearth(ServerLevel level) {
+		HearthBlockEntity hearth = hearth(level, hearthPos);
+		hearth.serverTick();
+		check.accept(level.getBlockState(hearthPos).getValue(HearthBlock.LIT), "a hearth over a lit campfire is lit");
+		hearth.insert(new ItemStack(Items.IRON_INGOT));
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS / 2; i++) {
+			hearth.serverTick();
+		}
+		check.accept(hearth.getHeat() > 0.45F && hearth.getHeat() < 0.55F && !hearth.isHot(), "an iron ingot is half heated after 5 seconds (" + hearth.getHeat() + ")");
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS / 2; i++) {
+			hearth.serverTick();
+		}
+		check.accept(hearth.isHot(), "...and at forging heat after 10");
+		ItemStack ingot = hearth.takeOut();
+		long now = level.getGameTime();
+		check.accept(ingot.is(Items.IRON_INGOT) && Heat.now(ingot, now) == 1.0F && hearth.getIngot().isEmpty(), "the ingot comes out hot, with its heat on it");
+		check.accept(Heat.now(ingot, now + Heat.COOLING_TICKS / 2) == 0.5F && Heat.now(ingot, now + Heat.COOLING_TICKS) == 0.0F, "it cools to nothing in 30 seconds out of the hearth");
+
+		hearth.insert(new ItemStack(Items.GOLD_INGOT));
+		for (int i = 0; i < Metal.QUICK_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		check.accept(hearth.isHot(), "gold heats in 6 seconds");
+		hearth.takeOut();
+		hearth.insert(new ItemStack(Items.NETHERITE_INGOT));
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		check.accept(!hearth.isHot() && hearth.getHeat() > 0.45F, "netherite is only halfway after 10 seconds");
+		hearth.takeOut();
+
+		BlockPos cold = hearthPos.offset(0, 0, 4);
+		level.setBlock(cold.below(), Blocks.STONE.defaultBlockState(), 3);
+		level.setBlock(cold, ForgemarkBlocks.HEARTH.get().defaultBlockState(), 3);
+		HearthBlockEntity coldHearth = hearth(level, cold);
+		coldHearth.insert(new ItemStack(Items.IRON_INGOT));
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
+			coldHearth.serverTick();
+		}
+		check.accept(!level.getBlockState(cold).getValue(HearthBlock.LIT) && coldHearth.getHeat() == 0.0F, "a hearth with nothing under it stays cold");
+		level.setBlock(cold.below(), Blocks.MAGMA_BLOCK.defaultBlockState(), 3);
+		coldHearth.serverTick();
+		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT), "magma under it lights it");
+		level.setBlock(cold.below(), Blocks.LAVA.defaultBlockState(), 3);
+		coldHearth.serverTick();
+		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT), "so does lava");
+		level.setBlock(cold.below(), Blocks.STONE.defaultBlockState(), 3);
+		coldHearth.takeOut();
+		check.accept(!Metal.isHeatable(new ItemStack(Items.STICK)) && !Metal.isHeatable(new ItemStack(Items.LEATHER)) && Metal.isHeatable(new ItemStack(Items.DIAMOND)),
+				"the hearth takes ingots and gems, not sticks or leather");
+	}
+
+	private void anvil(ServerLevel level, ServerPlayer player) {
+		ForgingAnvilBlockEntity anvil = anvil(level);
+		BlockState state = level.getBlockState(anvilPos);
+		BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(anvilPos), Direction.UP, anvilPos, false);
+		ItemStack hammer = new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get());
+
+		// Placing things through the block, as a player would.
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STICK));
+		state.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, hit);
+		check.accept(anvil.getItem().isEmpty(), "a stick can't be laid on the anvil");
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_PICKAXE));
+		state.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, hit);
+		check.accept(anvil.getItem().is(Items.IRON_PICKAXE) && player.getMainHandItem().isEmpty(), "an iron pickaxe goes on the anvil");
+		player.setItemInHand(InteractionHand.MAIN_HAND, hotIngot(level, Items.GOLD_INGOT));
+		state.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, hit);
+		check.accept(anvil.getIngot().isEmpty(), "a gold ingot is refused: it doesn't repair an iron pickaxe");
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT));
+		state.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, hit);
+		check.accept(anvil.getIngot().is(Items.IRON_INGOT), "a cold iron ingot is accepted (it just can't be struck yet)");
+		player.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+		anvil.strike(player, anvil.getZoneCenter());
+		check.accept(anvil.getStrikes().isEmpty(), "a cold ingot can't be struck");
+		state.useWithoutItem(level, player, hit);
+		check.accept(anvil.getIngot().isEmpty() && anvil.getItem().is(Items.IRON_PICKAXE), "an empty hand takes the ingot back first");
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+
+		// Five perfect strikes, with the reheat iron needs after three.
+		player.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+		for (int i = 0; i < 3; i++) {
+			aim(level, anvil);
+			anvil.strike(player, anvil.getZoneCenter());
+		}
+		check.accept(anvil.getStrikes().size() == 3 && anvil.getStrikes().stream().allMatch(s -> s == Forging.PERFECT), "three strikes on the zone centre are perfect");
+		check.accept(hammer.getDamageValue() == 3, "the hammer wears one point per strike (got " + hammer.getDamageValue() + ")");
+		anvil.strike(player, anvil.getZoneCenter());
+		check.accept(anvil.getStrikes().size() == 3, "the fourth strike is refused: iron is good for three per heat");
+		ItemStack dim = anvil.takeIngot();
+		check.accept(anvil.getStrikes().size() == 3, "taking the ingot off to reheat keeps the strikes");
+		HearthBlockEntity hearth = hearth(level, hearthPos);
+		hearth.insert(dim);
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		anvil.placeIngot(hearth.takeOut());
+		aim(level, anvil);
+		anvil.strike(player, anvil.getZoneCenter());
+		aim(level, anvil);
+		anvil.strike(player, anvil.getZoneCenter());
+		ItemStack pickaxe = anvil.getItem();
+		Temper temper = Temper.on(pickaxe);
+		long now = level.getGameTime();
+		check.accept(temper != null && temper.tier() == Tier.MASTERWORK && !temper.quenched() && temper.maker().equals(Optional.of(player.getName().getString())),
+				"five perfect strikes make a Masterwork pickaxe signed by the player");
+		check.accept(anvil.getIngot().isEmpty() && anvil.getStrikes().isEmpty(), "the ingot is spent and the anvil is ready for the next");
+		check.accept(Glowing.isHot(pickaxe, now) && !Glowing.isHot(pickaxe, now + Glowing.TICKS + 1), "the finished item glows for 15 seconds");
+
+		// The quench.
+		ItemStack finished = anvil.takeItem();
+		player.setItemInHand(InteractionHand.MAIN_HAND, finished);
+		BlockState cauldron = level.getBlockState(cauldronPos);
+		BlockHitResult cauldronHit = new BlockHitResult(Vec3.atCenterOf(cauldronPos), Direction.UP, cauldronPos, false);
+		cauldron.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, cauldronHit);
+		temper = Temper.on(player.getMainHandItem());
+		check.accept(temper != null && temper.quenched() && temper.tier() == Tier.MASTERWORK, "dipping it in a water cauldron quenches it");
+		check.accept(level.getBlockState(cauldronPos).getValue(LayeredCauldronBlock.LEVEL) == 2, "the cauldron loses a level");
+		check.accept(!Glowing.isHot(player.getMainHandItem(), now), "a quenched item stops glowing");
+		cauldron = level.getBlockState(cauldronPos);
+		cauldron.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, cauldronHit);
+		check.accept(level.getBlockState(cauldronPos).getValue(LayeredCauldronBlock.LEVEL) == 2, "dipping it again does nothing");
+		ItemStack plain = new ItemStack(Items.IRON_SWORD);
+		player.setItemInHand(InteractionHand.MAIN_HAND, plain);
+		cauldron.useItemOn(plain, level, player, InteractionHand.MAIN_HAND, cauldronHit);
+		check.accept(Temper.on(plain) == null && level.getBlockState(cauldronPos).getValue(LayeredCauldronBlock.LEVEL) == 2, "an untempered item in the cauldron is left to vanilla");
+
+		// Misses, mixed strikes, and re-tempering.
+		player.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 0, 0, 5) == Tier.ROUGH, "five misses make a Rough sword");
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 0, 2, 3) == Tier.ROUGH, "two good strikes and three misses are still Rough");
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 0, 3, 2) == Tier.STANDARD, "three good strikes make Standard");
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 0, 5, 0) == Tier.FINE, "five good strikes make Fine");
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 2, 3, 0) == Tier.SUPERIOR, "two perfect and three good make Superior");
+		check.accept(forge(level, player, new ItemStack(Items.IRON_SWORD), 4, 1, 0) == Tier.SUPERIOR, "four perfect and one good are Superior, not Masterwork");
+		ItemStack sword = new ItemStack(Items.IRON_SWORD);
+		forge(level, player, sword, 5, 0, 0);
+		Tier again = forge(level, player, sword, 0, 0, 5);
+		check.accept(again == Tier.MASTERWORK, "tempering a Masterwork sword again with misses keeps Masterwork");
+		Temper.put(sword, Temper.of(Tier.FINE, true, null));
+		forge(level, player, sword, 0, 5, 0);
+		temper = Temper.on(sword);
+		check.accept(temper != null && temper.tier() == Tier.FINE && temper.quenched(), "an equal result keeps the old quench");
+
+		// Lag: a report within the window counts where the player saw it; one far off is scored where the server saw it.
+		anvil.placeItem(new ItemStack(Items.IRON_SWORD));
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		anvil.strike(player, missNear(aim(level, anvil)));
+		check.accept(anvil.getStrikes().size() == 1 && anvil.getStrikes().getFirst() == Forging.MISS, "a press reported just outside the zone, within the lag window, is a miss as reported");
+		aim(level, anvil);
+		float farAway = (anvil.getZoneCenter() + 0.5F) % 1.0F;
+		anvil.strike(player, farAway);
+		check.accept(anvil.getStrikes().size() == 2 && anvil.getStrikes().get(1) == Forging.PERFECT,
+				"a press reported half a bar away from the server's marker is scored where the server saw it (on the centre)");
+		anvil.takeItem();
+		check.accept(Forging.plausible(0.50F, 0.60F) && !Forging.plausible(0.50F, 0.70F), "the lag window is 0.15 of the bar");
+
+		// No-timing mode: sneak to make every strike perfect, for a second ingot at the end.
+		player.getInventory().clearContent();
+		player.setItemInHand(InteractionHand.MAIN_HAND, hammer);
+		anvil.placeItem(new ItemStack(Items.IRON_SWORD));
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		player.setShiftKeyDown(true);
+		anvil.strike(player, missNear(aim(level, anvil)));
+		check.accept(anvil.getStrikes().isEmpty(), "no-timing mode is refused without the extra ingot in the inventory");
+		player.getInventory().add(new ItemStack(Items.IRON_INGOT, 3));
+		anvil.strike(player, missNear(aim(level, anvil)));
+		check.accept(anvil.getStrikes().size() == 1 && anvil.getStrikes().getFirst() == Forging.PERFECT, "sneaking with the extra ingot makes the strike perfect wherever the marker is");
+		for (int i = 0; i < 4; i++) {
+			if (i == 2) {
+				anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+			}
+			anvil.strike(player, missNear(aim(level, anvil)));
+		}
+		temper = Temper.on(anvil.getItem());
+		check.accept(temper != null && temper.tier() == Tier.MASTERWORK, "no-timing mode reaches Masterwork");
+		check.accept(player.getInventory().countItem(Items.IRON_INGOT) == 2, "...and takes the extra ingot at the end (3 left 2)");
+		player.setShiftKeyDown(false);
+		anvil.takeItem();
+		Config.noTimingMode = false;
+		anvil.placeItem(new ItemStack(Items.IRON_SWORD));
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		player.setShiftKeyDown(true);
+		anvil.strike(player, missNear(aim(level, anvil)));
+		check.accept(anvil.getStrikes().size() == 1 && anvil.getStrikes().getFirst() == Forging.MISS, "with no-timing mode off, sneaking is an ordinary timed strike");
+		player.setShiftKeyDown(false);
+		Config.noTimingMode = true;
+		anvil.takeItem();
+		player.getInventory().clearContent();
+
+		// A Rough temper never breaks a worn item.
+		ItemStack worn = new ItemStack(Items.IRON_PICKAXE);
+		worn.setDamageValue(worn.getMaxDamage() - 1);
+		forge(level, player, worn, 0, 0, 5);
+		check.accept(Temper.on(worn) != null && Temper.on(worn).tier() == Tier.ROUGH && !worn.isBroken() && worn.getDamageValue() == worn.getMaxDamage() - 1,
+				"a Rough temper on a nearly worn-out pickaxe leaves it one use from breaking, not broken");
+
+		// Eligibility now that the ingot must be heatable.
+		check.accept(!Quality.isTemperable(new ItemStack(Items.LEATHER_HELMET)) && !Quality.isTemperable(new ItemStack(Items.TURTLE_HELMET)),
+				"leather and turtle armour can't be tempered: nothing to heat");
+		check.accept(Quality.isTemperable(hammer), "the smithing hammer, repaired with iron, can be tempered itself");
+	}
+
+	/**
+	 * Lines the server's own marker up with the zone centre, as a well-timed player would. The
+	 * server samples the marker on whole ticks, so it lands within 0.025 of the centre; returns
+	 * where it actually is, which is what a report has to be close to.
+	 */
+	private static float aim(ServerLevel level, ForgingAnvilBlockEntity anvil) {
+		anvil.setSweepStart(level.getGameTime() - Math.round(anvil.getZoneCenter() * Forging.SWEEP_TICKS / 2));
+		return Forging.markerPosition(level.getGameTime() - anvil.getSweepStart());
+	}
+
+	/** A report at the edge of the lag window: outside the wide zone however the tick rounded. */
+	private static float missNear(float serverMarker) {
+		return serverMarker + 0.149F <= 1.0F ? serverMarker + 0.149F : serverMarker - 0.149F;
+	}
+
+	/** A report inside the wide zone but outside the narrow one, however the tick rounded. */
+	private static float goodNear(float serverMarker) {
+		return serverMarker + 0.08F <= 1.0F ? serverMarker + 0.08F : serverMarker - 0.08F;
+	}
+
+	/** Lays the item down, heats an iron ingot and strikes: so many perfect, good and missed. Returns the tier. */
+	private Tier forge(ServerLevel level, ServerPlayer player, ItemStack item, int perfect, int good, int miss) {
+		ForgingAnvilBlockEntity anvil = anvil(level);
+		if (!player.getMainHandItem().is(ForgemarkBlocks.SMITHING_HAMMER.get())) {
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get()));
+		}
+		anvil.placeItem(item);
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		int struck = 0;
+		for (int i = 0; i < Forging.STRIKES; i++) {
+			if (struck == Metal.DEFAULT_STRIKES_PER_HEAT) {
+				anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+				struck = 0;
+			}
+			float at = aim(level, anvil);
+			float position = i < perfect ? at : i < perfect + good ? goodNear(at) : missNear(at);
+			anvil.strike(player, position);
+			struck++;
+		}
+		Temper temper = Temper.on(anvil.getItem());
+		anvil.takeItem();
+		return temper == null ? null : temper.tier();
+	}
+
+	private void settings(ServerLevel level, ServerPlayer player) {
+		ItemStack sword = new ItemStack(Items.IRON_SWORD);
+		Temper.put(sword, Temper.of(Tier.MASTERWORK, true, null));
+		player.setItemInHand(InteractionHand.MAIN_HAND, sword);
+		DamageSource source = level.damageSources().playerAttack(player);
+		check.accept(Quality.pvpDamage(source, 10.0F) == 10.0F, "with affect-PvP on, a hit on a player keeps the temper bonus");
+		Config.affectPvp = false;
+		// Iron sword: +5 modifier, shown as 6; Masterwork quenched is +10% of 6 = 0.6.
+		check.accept(Math.abs(Quality.pvpDamage(source, 10.0F) - 9.4F) < 0.001F, "with it off, the bonus (0.6) comes back out of the hit (got " + Quality.pvpDamage(source, 10.0F) + ")");
+		Config.affectPvp = true;
+		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+
+		Config.maxTier = "fine";
+		Tier capped = forge(level, player, new ItemStack(Items.IRON_SWORD), 5, 0, 0);
+		Config.maxTier = "masterwork";
+		check.accept(capped == Tier.FINE, "the maximum-tier setting caps what the forge gives out");
+	}
+}

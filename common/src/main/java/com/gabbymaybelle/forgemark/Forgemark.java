@@ -1,5 +1,8 @@
 package com.gabbymaybelle.forgemark;
 
+import com.gabbymaybelle.forgemark.forge.ForgemarkBlocks;
+import com.gabbymaybelle.forgemark.forge.Glowing;
+import com.gabbymaybelle.forgemark.forge.Heat;
 import com.gabbymaybelle.forgemark.platform.Services;
 import com.gabbymaybelle.forgemark.quality.Temper;
 import org.slf4j.Logger;
@@ -22,6 +25,9 @@ public final class Forgemark {
 	public static void init() {
 		Config.load();
 		Temper.register();
+		Heat.register();
+		Glowing.register();
+		ForgemarkBlocks.register();
 		LOGGER.info("Forgemark: ready on {} (bonus scale {}%, maximum tier {})",
 				Services.PLATFORM.name(), Config.bonusScale, Config.maxTier);
 	}

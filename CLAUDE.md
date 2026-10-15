@@ -50,10 +50,7 @@ registrations in its registry event, so its `Platform` queues them and the resul
   JEI and REI and imports neither. Compatibility runs: `-PtestJade`, `-PtestJei`, `-PtestRei`,
   `-PtestEasyAnvils` (the anvil checks open a real anvil block's menu, so a mod that replaces it
   is what's under test).
-- NeoForge load check: `node ~/mods-dev/tools/neoforge-server-test.js <scratch folder> --mod neoforge/build/libs/<jar>`
-  starts a NeoForge server with the jar and fails on any data or mod error.
-- Fresh test worlds and background game driving: `~/mods-dev/tools/README.md`
-  (`new-test-world.js`, `mcf.js`).
+- NeoForge load check: start a NeoForge server with `neoforge/build/libs/<jar>` and fail on any data or mod error.
 
 ## Design rules the code must keep
 

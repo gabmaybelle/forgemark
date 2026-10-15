@@ -63,7 +63,10 @@ registrations in its registry event, so its `Platform` queues them and the resul
   tooltip mods that style by rarity keep working.
 - **Matching:** the ingot is whatever repairs the item: its `repairable` data, which is often a
   tag (aphelite gear is repaired through `beyond_the_dragon:aphelite_tool_materials`). Skip items
-  in `forgemark:not_temperable`.
+  in `forgemark:not_temperable`. The hearth takes anything in `forgemark:heatable` (vanilla
+  plus `c:ingots` and `c:gems`) or whose id ends in `ingot` or `_gem`, so a mod that skips the
+  shared tags still works; leather, planks and membrane must never heat. The game test's own
+  mod registers a "testium" metal to prove this.
 - **Vanilla interactions:** the anvil keeps the better tier when repairing or combining, the
   grindstone keeps the temper, a netherite upgrade carries the tier over.
 - **The server decides every strike.** The client draws the bar and sends the press; the server

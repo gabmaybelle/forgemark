@@ -4,6 +4,9 @@
 
 - An advancement trail that teaches the forge: Into the Fire (heat an ingot), Tempered, Hiss (the
   quench), A Steady Hand (a Fine temper), The Patient Way (no-timing mode) and Masterwork.
+- The hearth now heats any other mod's ingot or gem by its name, not only ones in the shared
+  `c:ingots` and `c:gems` tags, so gear from mods that skip those tags can be tempered too.
+  Leather, planks, cobblestone and membrane still can't be heated.
 - With JEI or REI installed, a Tempering tab lists every ingot and gem the hearth takes and the
   gear each one tempers, other mods' gear included. Looking up a sword's recipes shows which
   ingot to bring.

@@ -5,6 +5,9 @@
 	"name": "Forgemark game tests",
 	"environment": "*",
 	"entrypoints": {
+		"main": [
+			"com.gabbymaybelle.forgemark.Testium"
+		],
 		"fabric-client-gametest": [
 			"com.gabbymaybelle.forgemark.ForgemarkClientTest"
 		],

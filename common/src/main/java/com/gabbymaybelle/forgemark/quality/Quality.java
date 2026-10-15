@@ -3,6 +3,7 @@ package com.gabbymaybelle.forgemark.quality;
 import com.gabbymaybelle.forgemark.Config;
 import com.gabbymaybelle.forgemark.Forgemark;
 import com.gabbymaybelle.forgemark.ForgemarkTags;
+import com.gabbymaybelle.forgemark.forge.Metal;
 import com.gabbymaybelle.forgemark.platform.Services;
 import java.util.ArrayList;
 import java.util.List;
@@ -246,7 +247,7 @@ public final class Quality {
 			return false;
 		}
 		Repairable repairable = stack.get(DataComponents.REPAIRABLE);
-		if (repairable == null || repairable.items().stream().noneMatch(material -> material.is(ForgemarkTags.HEATABLE))) {
+		if (repairable == null || repairable.items().stream().noneMatch(material -> Metal.isHeatable(new ItemStack(material)))) {
 			return false;
 		}
 		if (isTool(stack)) {

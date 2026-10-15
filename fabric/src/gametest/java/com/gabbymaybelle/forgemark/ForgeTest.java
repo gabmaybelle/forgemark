@@ -1,5 +1,6 @@
 package com.gabbymaybelle.forgemark;
 
+import com.gabbymaybelle.forgemark.ForgemarkTags;
 import com.gabbymaybelle.forgemark.forge.ForgemarkBlocks;
 import com.gabbymaybelle.forgemark.forge.Forging;
 import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlockEntity;
@@ -175,6 +176,17 @@ final class ForgeTest {
 		coldHearth.takeOut();
 		check.accept(!Metal.isHeatable(new ItemStack(Items.STICK)) && !Metal.isHeatable(new ItemStack(Items.LEATHER)) && Metal.isHeatable(new ItemStack(Items.DIAMOND)),
 				"the hearth takes ingots and gems, not sticks or leather");
+		// Another mod's metal, in no tag at all: it looks like a metal by name, so it heats; its nugget doesn't.
+		ItemStack testium = new ItemStack(Testium.INGOT.get());
+		check.accept(!testium.is(ForgemarkTags.HEATABLE) && Metal.isHeatable(testium), "a modded ingot in none of the tags is heatable by its name");
+		check.accept(!Metal.isHeatable(new ItemStack(Testium.NUGGET.get())) && !Metal.isHeatable(new ItemStack(Items.PHANTOM_MEMBRANE)) && !Metal.isHeatable(new ItemStack(Items.OAK_PLANKS)),
+				"a nugget, a membrane and planks aren't");
+		hearth.insert(testium);
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		check.accept(hearth.isHot() && Metal.strikesPerHeat(hearth.getIngot()) == Metal.DEFAULT_STRIKES_PER_HEAT, "it heats in the default 10 seconds and is good for the default 3 strikes");
+		hearth.takeOut();
 
 		// "Into the Fire": an ingot put into a lit hearth, through the same path a right-click takes (vanilla's item_used_on_block).
 		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT, 2));
@@ -339,6 +351,12 @@ final class ForgeTest {
 		check.accept(!Quality.isTemperable(new ItemStack(Items.LEATHER_HELMET)) && !Quality.isTemperable(new ItemStack(Items.TURTLE_HELMET)),
 				"leather and turtle armour can't be tempered: nothing to heat");
 		check.accept(Quality.isTemperable(hammer), "the smithing hammer, repaired with iron, can be tempered itself");
+
+		// Another mod's sword, repaired through that mod's own tag, tempered with that mod's ingot.
+		ItemStack testiumSword = new ItemStack(Testium.SWORD.get());
+		check.accept(Quality.isTemperable(testiumSword) && testiumSword.isValidRepairItem(new ItemStack(Testium.INGOT.get())) && !testiumSword.isValidRepairItem(new ItemStack(Items.IRON_INGOT)),
+				"a modded sword repaired through its own tag can be tempered, and asks for its own ingot");
+		check.accept(forge(level, player, testiumSword, Testium.INGOT.get(), 2, 3, 0) == Tier.SUPERIOR, "...and reaches Superior with two perfect and three good strikes on its ingot");
 	}
 
 	/**
@@ -363,16 +381,20 @@ final class ForgeTest {
 
 	/** Lays the item down, heats an iron ingot and strikes: so many perfect, good and missed. Returns the tier. */
 	private Tier forge(ServerLevel level, ServerPlayer player, ItemStack item, int perfect, int good, int miss) {
+		return forge(level, player, item, Items.IRON_INGOT, perfect, good, miss);
+	}
+
+	private Tier forge(ServerLevel level, ServerPlayer player, ItemStack item, net.minecraft.world.item.Item ingot, int perfect, int good, int miss) {
 		ForgingAnvilBlockEntity anvil = anvil(level);
 		if (!player.getMainHandItem().is(ForgemarkBlocks.SMITHING_HAMMER.get())) {
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get()));
 		}
 		anvil.placeItem(item);
-		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		anvil.placeIngot(hotIngot(level, ingot));
 		int struck = 0;
 		for (int i = 0; i < Forging.STRIKES; i++) {
 			if (struck == Metal.DEFAULT_STRIKES_PER_HEAT) {
-				anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+				anvil.placeIngot(hotIngot(level, ingot));
 				struck = 0;
 			}
 			float at = aim(level, anvil);

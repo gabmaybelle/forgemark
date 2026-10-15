@@ -1,6 +1,7 @@
 package com.gabbymaybelle.forgemark.forge;
 
 import com.gabbymaybelle.forgemark.ForgemarkTags;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -20,9 +21,20 @@ public final class Metal {
 	private Metal() {
 	}
 
-	/** Whether the hearth takes this item. */
+	/**
+	 * Whether the hearth takes this item: anything in the heatable tag (vanilla ingots and gems,
+	 * the shared c:ingots and c:gems tags), or anything that looks like a metal by name, so a
+	 * mod that skips the shared tags still joins in. Leather, planks, cobblestone and membrane
+	 * repair things too, and none of them pass; the tag is there for odd names.
+	 */
 	public static boolean isHeatable(ItemStack stack) {
-		return !stack.isEmpty() && stack.is(ForgemarkTags.HEATABLE);
+		return !stack.isEmpty() && (stack.is(ForgemarkTags.HEATABLE) || looksLikeMetal(stack));
+	}
+
+	/** An item id ending in "ingot" or "gem", the way nearly every mod names its metals. */
+	public static boolean looksLikeMetal(ItemStack stack) {
+		String path = BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();
+		return path.endsWith("ingot") || path.endsWith("_gem");
 	}
 
 	/** Ticks from cold to forging heat. */

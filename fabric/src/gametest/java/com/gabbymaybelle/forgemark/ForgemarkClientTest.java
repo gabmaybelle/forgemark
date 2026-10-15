@@ -283,6 +283,8 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				&& iron.items().stream().anyMatch(s -> s.is(ForgemarkBlocks.SMITHING_HAMMER.get())), "the viewers list iron as tempering iron swords, chainmail and the hammer");
 		check(diamond != null && diamond.items().stream().anyMatch(s -> s.is(Items.DIAMOND_PICKAXE)) && diamond.items().stream().noneMatch(s -> s.is(Items.IRON_PICKAXE)),
 				"...and diamond as tempering diamond pickaxes, not iron ones");
+		TemperingEntries.Entry testium = entries.stream().filter(e -> e.ingot().is(Testium.INGOT.get())).findFirst().orElse(null);
+		check(testium != null && testium.items().size() == 1 && testium.items().getFirst().is(Testium.SWORD.get()), "...and a modded ingot as tempering that mod's sword, and only that");
 		check(entries.stream().noneMatch(e -> e.ingot().is(Items.LEATHER)) && entries.stream().flatMap(e -> e.items().stream()).noneMatch(s -> s.is(Items.LEATHER_HELMET) || s.is(Items.BOW)),
 				"leather, leather armour and bows are nowhere in the list");
 	}

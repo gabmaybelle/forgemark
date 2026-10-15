@@ -10,7 +10,8 @@ Masterwork, with your name on it. A missed strike lowers the result but never ru
 
 Bonuses are small and capped below the next material up, so a tempered iron sword never beats a
 plain diamond one: at most +15% durability, +10% mining speed, +10% attack damage, +0.5 armour
-toughness. Any mod's gear works as long as it can be repaired with an ingot, with no add-ons.
+toughness. Any mod's gear works as long as it can be repaired with an ingot or gem, with no
+add-ons: the hearth knows a metal by its name.
 
 ## How to forge
 

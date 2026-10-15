@@ -45,7 +45,9 @@ registrations in its registry event, so its `Platform` queues them and the resul
   `neoforge/.../compat/ReiNeoForgePlugin` carries it). Keep anything client-only in nested
   classes reached from the client registration methods, so a dedicated server never loads
   the viewers' client classes. `TemperingEntries` (ingot to the items it tempers) is shared by
-  JEI and REI and imports neither. Compatibility runs: `-PtestJade`, `-PtestJei`, `-PtestRei`.
+  JEI and REI and imports neither. Compatibility runs: `-PtestJade`, `-PtestJei`, `-PtestRei`,
+  `-PtestEasyAnvils` (the anvil checks open a real anvil block's menu, so a mod that replaces it
+  is what's under test).
 - NeoForge load check: `node ~/mods-dev/tools/neoforge-server-test.js <scratch folder> --mod neoforge/build/libs/<jar>`
   starts a NeoForge server with the jar and fails on any data or mod error.
 - Fresh test worlds and background game driving: `~/mods-dev/tools/README.md`

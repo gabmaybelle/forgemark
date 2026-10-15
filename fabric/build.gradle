@@ -43,6 +43,11 @@ dependencies {
 	if (project.hasProperty("testJei")) {
 		runtimeOnly "maven.modrinth:jei:${project.jei_fabric_version}"
 	}
+	if (project.hasProperty("testEasyAnvils")) {
+		runtimeOnly "maven.modrinth:easy-anvils:${project.easy_anvils_fabric_version}"
+		runtimeOnly "maven.modrinth:puzzles-lib:${project.puzzles_lib_fabric_version}"
+		runtimeOnly "maven.modrinth:forge-config-api-port:${project.forge_config_api_port_fabric_version}"
+	}
 	if (project.hasProperty("testRei")) {
 		runtimeOnly "maven.modrinth:rei:${project.rei_fabric_version}"
 		runtimeOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"

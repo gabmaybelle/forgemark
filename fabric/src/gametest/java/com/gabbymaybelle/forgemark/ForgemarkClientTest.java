@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldSave;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -33,7 +34,8 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.inventory.AnvilMenu;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.item.Item;
@@ -313,9 +315,21 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				"leather, leather armour and bows are nowhere in the list");
 	}
 
-	/** The vanilla anvil keeps the better temper when repairing or combining. */
+	/**
+	 * The vanilla anvil keeps the better temper when repairing or combining. The menu comes from
+	 * a real anvil block, so a mod that replaces the anvil's menu (Easy Anvils, -PtestEasyAnvils)
+	 * is the one under test when it's installed.
+	 */
 	private void anvil(MinecraftServer server) {
-		AnvilMenu anvil = new AnvilMenu(1, player(server).getInventory(), ContainerLevelAccess.NULL);
+		ServerPlayer player = player(server);
+		BlockPos pos = player.blockPosition().offset(0, 0, -3); // behind the player; the forge is built in front
+		server.overworld().setBlock(pos, Blocks.ANVIL.defaultBlockState(), 3);
+		MenuProvider provider = server.overworld().getBlockState(pos).getMenuProvider(server.overworld(), pos);
+		AbstractContainerMenu anvil = provider == null ? null : provider.createMenu(1, player.getInventory(), player);
+		check(anvil != null, "the anvil block gives a menu" + (anvil == null ? "" : " (" + anvil.getClass().getName() + ")"));
+		if (anvil == null) {
+			return;
+		}
 		ItemStack worn = tempered(Items.DIAMOND_SWORD, Temper.of(Tier.FINE, false, null));
 		worn.setDamageValue(300);
 		anvil.getSlot(0).set(worn);

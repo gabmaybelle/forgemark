@@ -7,6 +7,8 @@
 - The hearth now heats any other mod's ingot or gem by its name, not only ones in the shared
   `c:ingots` and `c:gems` tags, so gear from mods that skip those tags can be tempered too.
   Leather, planks, cobblestone and membrane still can't be heated.
+- Works with Easy Anvils: combining or repairing tempered gear in its anvil keeps the better
+  temper, the same as in vanilla's. The Fabric build now wants Fabric API 0.163.0 or newer.
 - Apotheosis and Tiered bonuses on a tempered item are left exactly as they are: Forgemark's
   percentages apply to the item's own stats only, so the two never multiply each other.
 - Botania's terrasteel counts as a slow, hard metal like netherite: 20 seconds to heat, four

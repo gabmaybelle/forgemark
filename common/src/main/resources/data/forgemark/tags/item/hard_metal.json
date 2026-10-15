@@ -17,6 +17,10 @@
 		{
 			"id": "#c:ingots/adamantite",
 			"required": false
+		},
+		{
+			"id": "#c:ingots/terrasteel",
+			"required": false
 		}
 	]
 }

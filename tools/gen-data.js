@@ -16,7 +16,7 @@ function write(rel, json) {
 const optional = (id) => ({ id, required: false });
 
 // Metals. Anything heatable that isn't in a tag below uses the defaults in Metal.java (heats
-// in 10 seconds, 3 strikes per heat). The c: tags are Fabric's and NeoForge's shared
+// in 10 seconds, 3 strikes per heat); Botania's terrasteel is netherite-class, so it's slow and hard. The c: tags are Fabric's and NeoForge's shared
 // conventions, so modded metals that use them are covered without per-mod code.
 write('data/forgemark/tags/item/heatable.json', {
 	values: ['minecraft:iron_ingot', 'minecraft:gold_ingot', 'minecraft:copper_ingot', 'minecraft:netherite_ingot', 'minecraft:diamond',
@@ -26,11 +26,11 @@ write('data/forgemark/tags/item/heats_quickly.json', {
 	values: ['minecraft:gold_ingot', 'minecraft:copper_ingot', optional('#c:ingots/gold'), optional('#c:ingots/copper'), optional('#c:ingots/tin'), optional('#c:ingots/silver')],
 });
 write('data/forgemark/tags/item/heats_slowly.json', {
-	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite')],
+	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel')],
 });
 write('data/forgemark/tags/item/soft_metal.json', { values: ['minecraft:gold_ingot', optional('#c:ingots/gold')] });
 write('data/forgemark/tags/item/hard_metal.json', {
-	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite')],
+	values: ['minecraft:netherite_ingot', 'minecraft:diamond', optional('#c:ingots/netherite'), optional('#c:gems/diamond'), optional('#c:ingots/steel'), optional('#c:ingots/adamantite'), optional('#c:ingots/terrasteel')],
 });
 
 // Blocks and items: states, models, item definitions, loot, recipes.

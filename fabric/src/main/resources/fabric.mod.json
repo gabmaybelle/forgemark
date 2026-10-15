@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"main": [
 			"com.gabbymaybelle.forgemark.fabric.ForgemarkFabric"
+		],
+		"client": [
+			"com.gabbymaybelle.forgemark.fabric.client.ForgemarkFabricClient"
 		]
 	},
 	"mixins": [

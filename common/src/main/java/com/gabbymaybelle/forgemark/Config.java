@@ -1,5 +1,6 @@
 package com.gabbymaybelle.forgemark;
 
+import com.gabbymaybelle.forgemark.network.SettingsPayload;
 import com.gabbymaybelle.forgemark.platform.Services;
 import java.io.IOException;
 import java.io.Reader;
@@ -20,13 +21,16 @@ import java.util.Properties;
  * is used with a warning in the log. The file is only rewritten when a setting is missing, and
  * then through a temp file so a crash mid-write can't leave it half done.
  *
- * <p>On a server these are the server's values. The ones the client needs for tooltips (bonus
- * scale, maximum tier) are sent to players when they join; that part arrives with the quality
- * system.
+ * <p>On a server these are the server's values. The ones the client needs to show and work out
+ * the same numbers (bonus scale, maximum tier, maker's mark) are sent to players when they join
+ * ({@link SettingsPayload}) and replace this file's values until they disconnect.
  */
 public final class Config {
 	public static final String FILE_NAME = Forgemark.MOD_ID + ".properties";
 	public static final List<String> TIERS = List.of("rough", "standard", "fine", "superior", "masterwork");
+
+	/** Whether the current bonus scale, maximum tier and maker's mark came from a server. */
+	public static boolean fromServer = false;
 
 	/** Multiplies every tier's bonus, in percent: 50 halves them, 0 turns them off. */
 	public static int bonusScale = 100;
@@ -64,7 +68,27 @@ public final class Config {
 		return Services.PLATFORM.configDir().resolve(FILE_NAME);
 	}
 
+	/** Takes the server's values on the client; {@link #load()} puts the file's values back. */
+	public static void applyFromServer(SettingsPayload settings) {
+		bonusScale = settings.bonusScale();
+		maxTier = TIERS.contains(settings.maxTier()) ? settings.maxTier() : "masterwork";
+		makersMark = settings.makersMark();
+		fromServer = true;
+	}
+
+	/** Whether a kind of item ("tools", "weapons" or "armor") is in the eligible-items setting. */
+	public static boolean eligible(String kind) {
+		for (String entry : eligibleItems.split(",")) {
+			String name = entry.trim();
+			if (name.equals(kind) || (kind.equals("armor") && name.equals("armour"))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void load() {
+		fromServer = false;
 		Path file = path();
 		Properties props = new Properties();
 		if (Files.exists(file)) {

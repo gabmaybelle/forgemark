@@ -1,0 +1,20 @@
+{
+	"forgemark.tier.rough": "Rough",
+	"forgemark.tier.standard": "Standard",
+	"forgemark.tier.fine": "Fine",
+	"forgemark.tier.superior": "Superior",
+	"forgemark.tier.masterwork": "Masterwork",
+	"forgemark.tooltip.tier": "%s temper",
+	"forgemark.tooltip.tier.quenched": "%s temper, water-quenched",
+	"forgemark.tooltip.durability": "%s durability",
+	"forgemark.tooltip.mining_speed": "%s mining speed",
+	"forgemark.tooltip.attack_damage": "%s attack damage",
+	"forgemark.tooltip.toughness": "%s toughness",
+	"forgemark.tooltip.maker": "Forged by %s",
+	"forgemark.tooltip.off": "Tempering bonuses are turned off here",
+	"commands.forgemark.temper.success": "%s is now %s",
+	"commands.forgemark.unknown_tier": "There's no tier called \"%s\": try rough, standard, fine, superior or masterwork",
+	"commands.forgemark.not_temperable": "%s can't be tempered",
+	"commands.forgemark.untemper.success": "%s is untempered",
+	"commands.forgemark.untemper.none": "%s isn't tempered"
+}

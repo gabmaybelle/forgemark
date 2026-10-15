@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- A new mod icon, the same one as on the mod's store pages: the smithing hammer over a warm forge
+  glow, with sparks flying off its head.
+
 ## 0.1.0 (2026-10-15)
 
 The first release, for Fabric and NeoForge on Minecraft 26.3. Everything below is in it.

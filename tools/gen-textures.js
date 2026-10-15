@@ -238,8 +238,45 @@ for (const [name, pixels] of Object.entries(textures)) {
 	console.log('placeholder ' + name);
 }
 
-// The mod icon (shown in mod lists): the hammer at 6x over a bed of coals from the hearth top,
-// 128x128. art/icon.png replaces it, like the textures.
+// The mod icon (shown in mod lists), the same design as the store pages' icon: the hammer with
+// hard edges over a dithered ember glow, with sparks off its head. Laid out on a 512 canvas and
+// drawn at any size that divides it: 128x128 here (`--store-icon <file>` writes the 512 one).
+// art/icon.png replaces the in-game icon, like the textures.
+function drawIcon(size) {
+	const k = size / 512, scale = 24 * k, cell = 16 * k, offset = (size - 16 * scale) / 2;
+	const hammer = textures["item/smithing_hammer"];
+	const hammerAt = (x, y, d = 0) => {
+		const hx = Math.floor((x - offset - d) / scale), hy = Math.floor((y - offset - d) / scale);
+		return hx >= 0 && hy >= 0 && hx < 16 && hy < 16 && hammer[hy][hx][3] > 0 ? hammer[hy][hx] : null;
+	};
+	// Ember glow: five soft bands, brightest just below the head, with a 4x4 ordered dither.
+	const palette = [[24, 13, 10], [50, 23, 14], [88, 35, 16], [134, 52, 19], [180, 78, 27]];
+	const bayer = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+	const cells = 512 / 16;
+	const glow = (cx, cy) => {
+		const dx = (cx + 0.5) / cells - 0.62, dy = (cy + 0.5) / cells - 0.52;
+		const t = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 0.78) ** 1.6 * (palette.length - 1);
+		const band = Math.floor(t);
+		const pick = t - band > (bayer[cy % 4][cx % 4] + 0.5) / 16 ? band + 1 : band;
+		return palette[Math.min(pick, palette.length - 1)];
+	};
+	// Sparks on the 512 canvas: [x, y, brightness 0 bright .. 2 dim], 22 pixels square.
+	const sparkColours = [[255, 244, 190], [255, 204, 90], [240, 130, 40]];
+	const sparks = [[392, 252, 0], [430, 226, 1], [412, 290, 0], [458, 270, 2], [372, 312, 1], [448, 318, 1], [474, 228, 2], [418, 350, 2]];
+	const sparkSize = Math.max(1, Math.round(22 * k));
+	return Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => {
+		const h = hammerAt(x, y);
+		// The metal warmed a touch, as if lit by the forge.
+		if (h) return [Math.min(255, Math.round(h[0] * 1.06 + 10)), Math.round(h[1] * 0.98 + 2), Math.round(h[2] * 0.9), 255];
+		for (const [sx, sy, c] of sparks) {
+			const px = Math.round(sx * k), py = Math.round(sy * k);
+			if (x >= px && x < px + sparkSize && y >= py && y < py + sparkSize) return [...sparkColours[c], 255];
+		}
+		let [r, g, b] = glow(Math.floor(x / cell), Math.floor(y / cell));
+		if (hammerAt(x, y, 12 * k)) { r *= 0.35; g *= 0.35; b *= 0.35; }   // drop shadow
+		return [Math.round(r), Math.round(g), Math.round(b), 255];
+	}));
+}
 {
 	const own = path.join(art, "icon.png");
 	const target = path.join(out, "..", "icon.png");
@@ -247,16 +284,13 @@ for (const [name, pixels] of Object.entries(textures)) {
 		fs.copyFileSync(own, target);
 		console.log("art/        icon");
 	} else {
-		const size = 128, scale = 6, offset = (size - 16 * scale) / 2;
-		const coals = textures["block/hearth_top"], hammer = textures["item/smithing_hammer"];
-		const icon = Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => {
-			const hx = Math.floor((x - offset) / scale), hy = Math.floor((y - offset) / scale);
-			if (hx >= 0 && hy >= 0 && hx < 16 && hy < 16 && hammer[hy][hx][3] > 0) return hammer[hy][hx];
-			const c = coals[Math.floor(y / 8)][Math.floor(x / 8)];
-			return [c[0], c[1], c[2], 255];
-		}));
-		writePng(target, icon);
+		writePng(target, drawIcon(128));
 		console.log("placeholder icon");
+	}
+	if (process.argv.includes('--store-icon')) {
+		const store = process.argv[process.argv.indexOf('--store-icon') + 1];
+		writePng(store, drawIcon(512));
+		console.log('store icon  ' + store);
 	}
 }
 

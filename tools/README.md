@@ -6,8 +6,10 @@ placeholder textures. Edit the scripts, not their output; the output lands under
 
 - `gen-textures.js`: 16x16 textures for the hearth, forging anvil and hammer, built from the vanilla
   textures they sit beside (bricks, stone, coal, the anvil, the iron ingot and stick), and the
-  128x128 mod icon (the hammer over the hearth's coals). A file with the same name in `art/`
-  (`art/icon.png` for the icon) is copied instead of generated, so Gabby's art always wins.
+  128x128 mod icon (the hammer over an ember glow with sparks, the same design as the store
+  pages' icon; `--store-icon <file>` also writes that one at 512x512). A file with the same name
+  in `art/` (`art/icon.png` for the icon) is copied instead of generated, so Gabby's art always
+  wins.
 - `gen-data.js`: the per-metal tags (`heats_quickly`, `heats_slowly`, `soft_metal`,
   `hard_metal`, `heatable`), block states, models, item definitions, loot tables, recipes and
   the advancement trail. The lang file is written by hand.

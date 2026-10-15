@@ -1,0 +1,48 @@
+{
+	"parent": "forgemark:root",
+	"criteria": {
+		"heated": {
+			"trigger": "minecraft:item_used_on_block",
+			"conditions": {
+				"location": {
+					"type": "minecraft:all_of",
+					"terms": [
+						{
+							"type": "minecraft:location_check",
+							"predicate": {
+								"block": {
+									"blocks": "forgemark:hearth",
+									"state": {
+										"lit": "true"
+									}
+								}
+							}
+						},
+						{
+							"type": "minecraft:match_tool",
+							"predicate": {
+								"items": "#forgemark:heatable"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "forgemark:hearth"
+		},
+		"title": {
+			"translate": "advancements.forgemark.into_the_fire.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.into_the_fire.description"
+		}
+	},
+	"requirements": [
+		[
+			"heated"
+		]
+	]
+}

@@ -18,7 +18,10 @@ The same as Beyond the Dragon's and Cozy Core's: one codebase, two jars.
 - `fabric/` and `neoforge/`: the entrypoints and a `Platform` each. Their `build.gradle` compiles
   `common`'s sources straight into their jar.
 - `fabric/src/gametest/`: the client game test.
-- `tools/`: generators for data files and textures. Edit the scripts, not their output.
+- `tools/`: generators for data files (tags, models, recipes, loot, the advancement trail),
+  textures and the mod icon. Edit the scripts, not their output.
+- `forge/TemperedTrigger` is the mod's one advancement trigger (`forgemark:tempered`), fired
+  from the anvil's finish and the quench; the trail's data files are generated.
 - `art/`: Gabby's own textures. Never replace them with generated art.
 
 Registering anything (blocks, items, block entities, menus, data components) goes through
@@ -32,8 +35,13 @@ registrations in its registry event, so its `Platform` queues them and the resul
 - `./gradlew :fabric:runClientGameTest`: the in-game checks in a real game window. Tempering runs
   through every tier on vanilla gear, then saves, reloads and checks the tier is still there.
   Add `-PtestX` flags to play it with another mod installed (fetched from Modrinth's maven, never
-  bundled), the same way Beyond the Dragon does. Planned: Mythic Metals (once it's on 26.3),
-  Beyond the Dragon (aphelite gear), Tiered.
+  bundled), the same way Beyond the Dragon does: `-PtestJade` today. Planned: Mythic Metals
+  (once it's on 26.3), Beyond the Dragon (aphelite gear, once it's on 26.3), Tiered.
+- Jade's API is a compile-only dependency on both loaders (`jade_*_version` in
+  `gradle.properties` are Modrinth version ids). The plugin is `common/.../compat/JadePlugin`:
+  Fabric finds it through the `jade` entrypoint, NeoForge through its annotation. Keep the
+  providers in nested classes reached only from `registerClient`, so a dedicated server never
+  loads Jade's client classes.
 - NeoForge load check: `node ~/mods-dev/tools/neoforge-server-test.js <scratch folder> --mod neoforge/build/libs/<jar>`
   starts a NeoForge server with the jar and fails on any data or mod error.
 - Fresh test worlds and background game driving: `~/mods-dev/tools/README.md`

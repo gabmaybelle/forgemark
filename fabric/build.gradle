@@ -22,10 +22,17 @@ dependencies {
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
+	// Jade's API, for the hearth and anvil overlay (common/.../compat/JadePlugin). Compile only:
+	// nothing is bundled, and the plugin only loads when Jade is installed.
+	compileOnly "maven.modrinth:jade:${project.jade_fabric_version}"
+
 	// Compatibility runs: `./gradlew :fabric:runClientGameTest -PtestX` plays the in-game test
 	// with another mod installed, fetched from Modrinth's maven by version id (see
 	// gradle.properties). Nothing here is bundled or required. Planned: Beyond the Dragon
-	// (aphelite gear), Mythic Metals once it reaches 26.3, Tiered.
+	// (aphelite gear, once it reaches 26.3), Mythic Metals once it reaches 26.3, Tiered.
+	if (project.hasProperty("testJade")) {
+		runtimeOnly "maven.modrinth:jade:${project.jade_fabric_version}"
+	}
 }
 
 processResources {

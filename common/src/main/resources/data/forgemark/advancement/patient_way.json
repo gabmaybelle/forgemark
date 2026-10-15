@@ -1,0 +1,27 @@
+{
+	"parent": "forgemark:tempered",
+	"criteria": {
+		"no_timing": {
+			"trigger": "forgemark:tempered",
+			"conditions": {
+				"no_timing": true
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "minecraft:iron_ingot"
+		},
+		"title": {
+			"translate": "advancements.forgemark.patient_way.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.patient_way.description"
+		}
+	},
+	"requirements": [
+		[
+			"no_timing"
+		]
+	]
+}

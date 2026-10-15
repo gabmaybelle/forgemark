@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
@@ -34,7 +35,11 @@ public final class Quench {
 			return false;
 		}
 		if (!level.isClientSide()) {
-			Temper.put(stack, new Temper(temper.tier(), true, temper.maker()));
+			Temper quenched = new Temper(temper.tier(), true, temper.maker());
+			Temper.put(stack, quenched);
+			if (player instanceof ServerPlayer serverPlayer) {
+				TemperedTrigger.get().trigger(serverPlayer, quenched, false);
+			}
 			Glowing.clear(stack);
 			LayeredCauldronBlock.lowerFillLevel(state, level, pos);
 			level.playSound(null, pos, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS, 0.7F, 1.0F);

@@ -238,6 +238,28 @@ for (const [name, pixels] of Object.entries(textures)) {
 	console.log('placeholder ' + name);
 }
 
+// The mod icon (shown in mod lists): the hammer at 6x over a bed of coals from the hearth top,
+// 128x128. art/icon.png replaces it, like the textures.
+{
+	const own = path.join(art, "icon.png");
+	const target = path.join(out, "..", "icon.png");
+	if (fs.existsSync(own)) {
+		fs.copyFileSync(own, target);
+		console.log("art/        icon");
+	} else {
+		const size = 128, scale = 6, offset = (size - 16 * scale) / 2;
+		const coals = textures["block/hearth_top"], hammer = textures["item/smithing_hammer"];
+		const icon = Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => {
+			const hx = Math.floor((x - offset) / scale), hy = Math.floor((y - offset) / scale);
+			if (hx >= 0 && hy >= 0 && hx < 16 && hy < 16 && hammer[hy][hx][3] > 0) return hammer[hy][hx];
+			const c = coals[Math.floor(y / 8)][Math.floor(x / 8)];
+			return [c[0], c[1], c[2], 255];
+		}));
+		writePng(target, icon);
+		console.log("placeholder icon");
+	}
+}
+
 // A preview sheet for checking by eye: every texture at 8x, side by side (not shipped).
 if (process.argv.includes('--preview')) {
 	const names = Object.keys(textures);

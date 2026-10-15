@@ -214,6 +214,8 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 		} else {
 			player.sendOverlayMessage(Component.translatable("forgemark.anvil.kept", item.getHoverName(), old.tier().displayName()));
 		}
+		// The advancement trail hears about the tier the strikes earned, whether or not the item kept a better one.
+		TemperedTrigger.get().trigger(player, Temper.of(tier, false, null), noTiming);
 		ingot = ItemStack.EMPTY;
 		if (noTiming) {
 			takeMatchingIngots(player.getInventory(), Config.noTimingCost - 1);

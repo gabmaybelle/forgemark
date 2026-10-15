@@ -1,0 +1,27 @@
+{
+	"parent": "forgemark:tempered",
+	"criteria": {
+		"quenched": {
+			"trigger": "forgemark:tempered",
+			"conditions": {
+				"quenched": true
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "minecraft:cauldron"
+		},
+		"title": {
+			"translate": "advancements.forgemark.quenched.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.quenched.description"
+		}
+	},
+	"requirements": [
+		[
+			"quenched"
+		]
+	]
+}

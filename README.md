@@ -30,6 +30,9 @@ toughness. Any mod's gear works as long as it can be repaired with an ingot, wit
 Five good strikes earn a Fine temper, perfect ones Masterwork with your name on it. Tempering
 again keeps the better result. Sneak while striking to skip the timing for a second ingot.
 
+The advancements screen has a Forgemark tab that walks you through these steps. With
+[Jade](https://modrinth.com/mod/jade) installed, looking at a hearth or anvil shows what's in it.
+
 **It's in development.** The forge works in singleplayer and on servers; the look is placeholder
 art until the real textures land.
 

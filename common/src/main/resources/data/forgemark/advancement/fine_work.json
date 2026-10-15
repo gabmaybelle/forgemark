@@ -1,0 +1,27 @@
+{
+	"parent": "forgemark:tempered",
+	"criteria": {
+		"fine": {
+			"trigger": "forgemark:tempered",
+			"conditions": {
+				"tier": "fine"
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "minecraft:iron_sword"
+		},
+		"title": {
+			"translate": "advancements.forgemark.fine_work.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.fine_work.description"
+		}
+	},
+	"requirements": [
+		[
+			"fine"
+		]
+	]
+}

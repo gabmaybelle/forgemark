@@ -4,6 +4,7 @@
 	"version": "${version}",
 	"name": "Forgemark",
 	"description": "Temper the tools, weapons and armour you already have, from any mod, at a hearth and forging anvil, for a small, capped quality bonus. Crafting is left alone.",
+	"icon": "assets/forgemark/icon.png",
 	"authors": [
 		"Gabby"
 	],
@@ -20,6 +21,9 @@
 		],
 		"client": [
 			"com.gabbymaybelle.forgemark.fabric.client.ForgemarkFabricClient"
+		],
+		"jade": [
+			"com.gabbymaybelle.forgemark.compat.JadePlugin"
 		]
 	},
 	"mixins": [

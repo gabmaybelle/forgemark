@@ -71,3 +71,39 @@ write('data/forgemark/recipe/forging_anvil.json', {
 write('data/forgemark/recipe/smithing_hammer.json', {
 	type: 'minecraft:crafting_shaped', pattern: ['II ', 'IS ', '  S'], key: { I: 'minecraft:iron_ingot', S: 'minecraft:stick' }, result: { id: 'forgemark:smithing_hammer' },
 });
+
+// The advancement trail: a few steps that teach the forge, in the order a player meets it.
+// `forgemark:tempered` is the mod's own trigger (TemperedTrigger.java); the rest are vanilla's.
+const adv = (name, parent, icon, criteria, extra = {}) => write(`data/forgemark/advancement/${name}.json`, {
+	...(parent ? { parent: 'forgemark:' + parent } : {}),
+	criteria,
+	display: {
+		icon: { id: icon },
+		title: { translate: `advancements.forgemark.${name}.title` },
+		description: { translate: `advancements.forgemark.${name}.description` },
+		...extra,
+	},
+	requirements: [Object.keys(criteria)],
+});
+adv('root', null, 'forgemark:smithing_hammer', {
+	forge: { trigger: 'minecraft:inventory_changed', conditions: { items: [{ items: ['forgemark:hearth', 'forgemark:forging_anvil', 'forgemark:smithing_hammer'] }] } },
+}, { background: 'minecraft:gui/advancements/backgrounds/stone', show_toast: false, announce_to_chat: false });
+adv('into_the_fire', 'root', 'forgemark:hearth', {
+	heated: {
+		trigger: 'minecraft:item_used_on_block',
+		conditions: {
+			location: {
+				type: 'minecraft:all_of',
+				terms: [
+					{ type: 'minecraft:location_check', predicate: { block: { blocks: 'forgemark:hearth', state: { lit: 'true' } } } },
+					{ type: 'minecraft:match_tool', predicate: { items: '#forgemark:heatable' } },
+				],
+			},
+		},
+	},
+});
+adv('tempered', 'into_the_fire', 'forgemark:forging_anvil', { tempered: { trigger: 'forgemark:tempered', conditions: {} } });
+adv('quenched', 'tempered', 'minecraft:cauldron', { quenched: { trigger: 'forgemark:tempered', conditions: { quenched: true } } });
+adv('fine_work', 'tempered', 'minecraft:iron_sword', { fine: { trigger: 'forgemark:tempered', conditions: { tier: 'fine' } } });
+adv('masterwork', 'fine_work', 'minecraft:diamond_sword', { masterwork: { trigger: 'forgemark:tempered', conditions: { tier: 'masterwork' } } }, { frame: 'challenge' });
+adv('patient_way', 'tempered', 'minecraft:iron_ingot', { no_timing: { trigger: 'forgemark:tempered', conditions: { no_timing: true } } });

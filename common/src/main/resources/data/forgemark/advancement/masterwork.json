@@ -1,0 +1,28 @@
+{
+	"parent": "forgemark:fine_work",
+	"criteria": {
+		"masterwork": {
+			"trigger": "forgemark:tempered",
+			"conditions": {
+				"tier": "masterwork"
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "minecraft:diamond_sword"
+		},
+		"title": {
+			"translate": "advancements.forgemark.masterwork.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.masterwork.description"
+		},
+		"frame": "challenge"
+	},
+	"requirements": [
+		[
+			"masterwork"
+		]
+	]
+}

@@ -8,6 +8,12 @@ sourceSets.main {
 	resources.srcDir project(':common').file('src/main/resources')
 }
 
+dependencies {
+	// Jade's API, for the hearth and anvil overlay (common/.../compat/JadePlugin). Compile only:
+	// nothing is bundled, and the plugin only loads when Jade is installed.
+	compileOnly "maven.modrinth:jade:${project.jade_neoforge_version}"
+}
+
 neoForge {
 	version = project.neoforge_version
 

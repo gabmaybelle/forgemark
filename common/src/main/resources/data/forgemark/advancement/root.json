@@ -1,0 +1,37 @@
+{
+	"criteria": {
+		"forge": {
+			"trigger": "minecraft:inventory_changed",
+			"conditions": {
+				"items": [
+					{
+						"items": [
+							"forgemark:hearth",
+							"forgemark:forging_anvil",
+							"forgemark:smithing_hammer"
+						]
+					}
+				]
+			}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "forgemark:smithing_hammer"
+		},
+		"title": {
+			"translate": "advancements.forgemark.root.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.root.description"
+		},
+		"background": "minecraft:gui/advancements/backgrounds/stone",
+		"show_toast": false,
+		"announce_to_chat": false
+	},
+	"requirements": [
+		[
+			"forge"
+		]
+	]
+}

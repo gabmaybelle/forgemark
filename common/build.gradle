@@ -9,6 +9,8 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	// Only for the Mixin annotations and the launch-side classes they need. No Fabric API here.
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	// Jade API (loader-neutral), for compat/JadePlugin. Compile only; see fabric/build.gradle.
+	compileOnly "maven.modrinth:jade:${project.jade_fabric_version}"
 
 	// Plain unit tests for the pure logic (tier maths): `./gradlew :common:test`.
 	testImplementation platform('org.junit:junit-bom:5.11.4')

@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -61,7 +62,8 @@ final class ForgeTest {
 			level.setBlock(anvilPos, ForgemarkBlocks.FORGING_ANVIL.get().defaultBlockState(), 3);
 			level.setBlock(cauldronPos.below(), Blocks.STONE.defaultBlockState(), 3);
 			level.setBlock(cauldronPos, Blocks.WATER_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), 3);
-			hearth(level);
+			check.accept(!done(player, "root") && !done(player, "into_the_fire") && !done(player, "tempered"), "the advancement trail starts empty");
+			hearth(level, player);
 			anvil(level, player);
 			settings(level, player);
 			// Leave a session running for the screenshot and the reopen: item and hot ingot on the anvil, two strikes in.
@@ -87,6 +89,8 @@ final class ForgeTest {
 		boolean lookingAtAnvil = ctx.computeOnClient(client -> client.hitResult instanceof BlockHitResult hit && hit.getBlockPos().equals(anvilPos)
 				&& client.level != null && client.level.getBlockEntity(anvilPos) instanceof ForgingAnvilBlockEntity anvil && anvil.canStrike() && anvil.getStrikes().size() == 2);
 		check.accept(lookingAtAnvil, "the client sees the anvil mid-session (the strike bar is drawn in the screenshot)");
+		world.getServer().runOnServer(server -> check.accept(done(server.getPlayerList().getPlayers().getFirst(), "root"),
+				"the trail's root is awarded once the player holds the hammer (an inventory change, seen on the next tick)"));
 		ctx.takeScreenshot("forgemark_strike_bar");
 	}
 
@@ -115,7 +119,12 @@ final class ForgeTest {
 		return hearth.takeOut();
 	}
 
-	private void hearth(ServerLevel level) {
+	/** Whether the player has one of Forgemark's advancements. */
+	private static boolean done(ServerPlayer player, String name) {
+		return player.getAdvancements().getOrStartProgress(player.level().getServer().getAdvancements().get(Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, name))).isDone();
+	}
+
+	private void hearth(ServerLevel level, ServerPlayer player) {
 		HearthBlockEntity hearth = hearth(level, hearthPos);
 		hearth.serverTick();
 		check.accept(level.getBlockState(hearthPos).getValue(HearthBlock.LIT), "a hearth over a lit campfire is lit");
@@ -162,9 +171,20 @@ final class ForgeTest {
 		coldHearth.serverTick();
 		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT), "so does lava");
 		level.setBlock(cold.below(), Blocks.STONE.defaultBlockState(), 3);
+		coldHearth.serverTick(); // notices the stone and goes out
 		coldHearth.takeOut();
 		check.accept(!Metal.isHeatable(new ItemStack(Items.STICK)) && !Metal.isHeatable(new ItemStack(Items.LEATHER)) && Metal.isHeatable(new ItemStack(Items.DIAMOND)),
 				"the hearth takes ingots and gems, not sticks or leather");
+
+		// "Into the Fire": an ingot put into a lit hearth, through the same path a right-click takes (vanilla's item_used_on_block).
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_INGOT, 2));
+		player.gameMode.useItemOn(player, level, player.getMainHandItem(), InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(cold), Direction.UP, cold, false));
+		check.accept(coldHearth.getIngot().is(Items.IRON_INGOT) && !done(player, "into_the_fire"), "an ingot in a cold hearth doesn't earn Into the Fire");
+		coldHearth.takeOut();
+		player.gameMode.useItemOn(player, level, player.getMainHandItem(), InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(hearthPos), Direction.UP, hearthPos, false));
+		check.accept(hearth.getIngot().is(Items.IRON_INGOT) && done(player, "into_the_fire"), "an ingot in a lit hearth does");
+		hearth.takeOut();
+		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 	}
 
 	private void anvil(ServerLevel level, ServerPlayer player) {
@@ -222,6 +242,8 @@ final class ForgeTest {
 				"five perfect strikes make a Masterwork pickaxe signed by the player");
 		check.accept(anvil.getIngot().isEmpty() && anvil.getStrikes().isEmpty(), "the ingot is spent and the anvil is ready for the next");
 		check.accept(Glowing.isHot(pickaxe, now) && !Glowing.isHot(pickaxe, now + Glowing.TICKS + 1), "the finished item glows for 15 seconds");
+		check.accept(done(player, "tempered") && done(player, "fine_work") && done(player, "masterwork"), "a Masterwork temper earns Tempered, A Steady Hand and Masterwork");
+		check.accept(!done(player, "quenched") && !done(player, "patient_way"), "...but not Hiss or The Patient Way yet");
 
 		// The quench.
 		ItemStack finished = anvil.takeItem();
@@ -233,6 +255,7 @@ final class ForgeTest {
 		check.accept(temper != null && temper.quenched() && temper.tier() == Tier.MASTERWORK, "dipping it in a water cauldron quenches it");
 		check.accept(level.getBlockState(cauldronPos).getValue(LayeredCauldronBlock.LEVEL) == 2, "the cauldron loses a level");
 		check.accept(!Glowing.isHot(player.getMainHandItem(), now), "a quenched item stops glowing");
+		check.accept(done(player, "quenched"), "the quench earns Hiss");
 		cauldron = level.getBlockState(cauldronPos);
 		cauldron.useItemOn(player.getMainHandItem(), level, player, InteractionHand.MAIN_HAND, cauldronHit);
 		check.accept(level.getBlockState(cauldronPos).getValue(LayeredCauldronBlock.LEVEL) == 2, "dipping it again does nothing");
@@ -291,6 +314,7 @@ final class ForgeTest {
 		temper = Temper.on(anvil.getItem());
 		check.accept(temper != null && temper.tier() == Tier.MASTERWORK, "no-timing mode reaches Masterwork");
 		check.accept(player.getInventory().countItem(Items.IRON_INGOT) == 2, "...and takes the extra ingot at the end (3 left 2)");
+		check.accept(done(player, "patient_way"), "a no-timing temper earns The Patient Way");
 		player.setShiftKeyDown(false);
 		anvil.takeItem();
 		Config.noTimingMode = false;

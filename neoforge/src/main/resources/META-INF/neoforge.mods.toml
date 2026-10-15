@@ -8,6 +8,7 @@ displayName = "Forgemark"
 authors = "Gabby"
 description = '''Temper the tools, weapons and armour you already have, from any mod, at a hearth and forging anvil, for a small, capped quality bonus. Crafting is left alone.'''
 displayURL = "https://github.com/gabmaybelle/forgemark"
+logoFile = "assets/forgemark/icon.png"
 
 [[mixins]]
 config = "forgemark.mixins.json"

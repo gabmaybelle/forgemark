@@ -1,0 +1,25 @@
+{
+	"parent": "forgemark:into_the_fire",
+	"criteria": {
+		"tempered": {
+			"trigger": "forgemark:tempered",
+			"conditions": {}
+		}
+	},
+	"display": {
+		"icon": {
+			"id": "forgemark:forging_anvil"
+		},
+		"title": {
+			"translate": "advancements.forgemark.tempered.title"
+		},
+		"description": {
+			"translate": "advancements.forgemark.tempered.description"
+		}
+	},
+	"requirements": [
+		[
+			"tempered"
+		]
+	]
+}

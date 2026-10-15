@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- An advancement trail that teaches the forge: Into the Fire (heat an ingot), Tempered, Hiss (the
+  quench), A Steady Hand (a Fine temper), The Patient Way (no-timing mode) and Masterwork.
+- With Jade installed, looking at a hearth shows the ingot and how hot it is, and looking at a
+  forging anvil shows what's on it and how many strikes are in.
+- A mod icon.
 - The forge: a hearth that heats an ingot over a campfire, lava or magma; a forging anvil that
   holds your gear and the hot ingot; and a smithing hammer. Strike when the marker is in the
   zone, five times, with a reheat when the ingot dims, then quench in a water cauldron. Timing

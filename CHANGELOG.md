@@ -4,6 +4,9 @@
 
 - An advancement trail that teaches the forge: Into the Fire (heat an ingot), Tempered, Hiss (the
   quench), A Steady Hand (a Fine temper), The Patient Way (no-timing mode) and Masterwork.
+- With JEI or REI installed, a Tempering tab lists every ingot and gem the hearth takes and the
+  gear each one tempers, other mods' gear included. Looking up a sword's recipes shows which
+  ingot to bring.
 - With Jade installed, looking at a hearth shows the ingot and how hot it is, and looking at a
   forging anvil shows what's on it and how many strikes are in.
 - A mod icon.

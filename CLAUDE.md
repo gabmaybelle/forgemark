@@ -37,11 +37,15 @@ registrations in its registry event, so its `Platform` queues them and the resul
   Add `-PtestX` flags to play it with another mod installed (fetched from Modrinth's maven, never
   bundled), the same way Beyond the Dragon does: `-PtestJade` today. Planned: Mythic Metals
   (once it's on 26.3), Beyond the Dragon (aphelite gear, once it's on 26.3), Tiered.
-- Jade's API is a compile-only dependency on both loaders (`jade_*_version` in
-  `gradle.properties` are Modrinth version ids). The plugin is `common/.../compat/JadePlugin`:
-  Fabric finds it through the `jade` entrypoint, NeoForge through its annotation. Keep the
-  providers in nested classes reached only from `registerClient`, so a dedicated server never
-  loads Jade's client classes.
+- Jade, JEI and REI are compile-only dependencies on all three projects (`*_version` in
+  `gradle.properties` are Modrinth version ids; REI also needs architectury, cloth-config and
+  cloth's `basic-math` from shedaniel's maven). The plugins are `common/.../compat/*Plugin`:
+  Fabric finds them through entrypoints in `fabric.mod.json` (`jade`, `jei_mod_plugin`,
+  `rei_client`), NeoForge through annotations (REI's lives only in its NeoForge jar, so
+  `neoforge/.../compat/ReiNeoForgePlugin` carries it). Keep anything client-only in nested
+  classes reached from the client registration methods, so a dedicated server never loads
+  the viewers' client classes. `TemperingEntries` (ingot to the items it tempers) is shared by
+  JEI and REI and imports neither. Compatibility runs: `-PtestJade`, `-PtestJei`, `-PtestRei`.
 - NeoForge load check: `node ~/mods-dev/tools/neoforge-server-test.js <scratch folder> --mod neoforge/build/libs/<jar>`
   starts a NeoForge server with the jar and fails on any data or mod error.
 - Fresh test worlds and background game driving: `~/mods-dev/tools/README.md`

@@ -58,5 +58,6 @@
 	"forgemark.jade.anvil.item": "Tempering: %s",
 	"forgemark.jade.anvil.strikes": "Strikes: %s of %s",
 	"config.jade.plugin_forgemark.hearth": "Hearth",
-	"config.jade.plugin_forgemark.forging_anvil": "Forging anvil"
+	"config.jade.plugin_forgemark.forging_anvil": "Forging anvil",
+	"forgemark.category.tempering": "Tempering"
 }

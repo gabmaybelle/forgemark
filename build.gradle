@@ -16,6 +16,15 @@ subprojects {
 				includeGroup 'maven.modrinth'
 			}
 		}
+		// REI's Point and Rectangle (cloth basic-math), which Modrinth only ships nested inside cloth-config.
+		exclusiveContent {
+			forRepository {
+				maven { url = 'https://maven.shedaniel.me/' }
+			}
+			filter {
+				includeGroup 'me.shedaniel.cloth'
+			}
+		}
 	}
 
 	tasks.withType(JavaCompile).configureEach {

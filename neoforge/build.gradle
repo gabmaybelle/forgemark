@@ -12,6 +12,12 @@ dependencies {
 	// Jade's API, for the hearth and anvil overlay (common/.../compat/JadePlugin). Compile only:
 	// nothing is bundled, and the plugin only loads when Jade is installed.
 	compileOnly "maven.modrinth:jade:${project.jade_neoforge_version}"
+	compileOnly "maven.modrinth:jei:${project.jei_neoforge_version}"
+	compileOnly "maven.modrinth:rei:${project.rei_neoforge_version}"
+	// REI's API refers to these two (architectury fluids, cloth's Point and Rectangle).
+	compileOnly "maven.modrinth:architectury-api:${project.architectury_neoforge_version}"
+	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_neoforge_version}"
+	compileOnly "me.shedaniel.cloth:basic-math:${project.basic_math_version}"
 }
 
 neoForge {

@@ -1,5 +1,7 @@
 package com.gabbymaybelle.forgemark;
 
+import com.gabbymaybelle.forgemark.compat.TemperingEntries;
+import com.gabbymaybelle.forgemark.forge.ForgemarkBlocks;
 import com.gabbymaybelle.forgemark.platform.Services;
 import com.gabbymaybelle.forgemark.quality.Quality;
 import com.gabbymaybelle.forgemark.quality.Temper;
@@ -16,6 +18,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldSave;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -74,6 +77,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 				quenchAndSettings();
 				tooltips(server);
 				eligibility();
+				viewerEntries();
 				anvil(server);
 				grindstone(server);
 				netheriteUpgrade(server);
@@ -81,6 +85,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 			});
 			ctx.takeScreenshot("forgemark_in_world");
 			forge.run(ctx, world);
+			viewerScreens(ctx);
 			world.getServer().runOnServer(server -> {
 				ItemStack keepsake = new ItemStack(Items.DIAMOND_PICKAXE);
 				Temper.put(keepsake, Temper.of(Tier.MASTERWORK, true, "Gabby"));
@@ -101,6 +106,33 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		}
 		if (!failures.isEmpty()) {
 			throw new AssertionError(failures.size() + " check(s) failed:\n - " + String.join("\n - ", failures));
+		}
+	}
+
+	/** With JEI or REI installed (-PtestJei, -PtestRei): the Tempering tab opens, for the screenshot. */
+	private void viewerScreens(ClientGameTestContext ctx) {
+		if (FabricLoader.getInstance().isModLoaded("jei")) {
+			boolean opened = ctx.computeOnClient(client -> ViewerScreens.openJei());
+			ctx.waitTicks(20);
+			check(opened && screenOpen(ctx), "JEI opens the Tempering tab");
+			ctx.takeScreenshot("forgemark_jei_tempering");
+			ctx.setScreen(() -> null);
+		}
+		if (FabricLoader.getInstance().isModLoaded("roughlyenoughitems")) {
+			boolean opened = ctx.computeOnClient(client -> ViewerScreens.openRei());
+			ctx.waitTicks(20);
+			check(opened && screenOpen(ctx), "REI opens the Tempering tab");
+			ctx.takeScreenshot("forgemark_rei_tempering");
+			ctx.setScreen(() -> null);
+		}
+	}
+
+	private static boolean screenOpen(ClientGameTestContext ctx) {
+		try {
+			ctx.waitForScreen(Screen.class);
+			return true;
+		} catch (RuntimeException | AssertionError e) {
+			return false;
 		}
 	}
 
@@ -240,6 +272,19 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		check(!Quality.isTemperable(new ItemStack(Items.DIAMOND_PICKAXE)) && Quality.isTemperable(new ItemStack(Items.IRON_SWORD)),
 				"the eligible-items setting narrows it down");
 		Config.eligibleItems = "tools,weapons,armor";
+	}
+
+	/** What JEI and REI list: each ingot with the items it tempers, read off the items themselves. */
+	private void viewerEntries() {
+		List<TemperingEntries.Entry> entries = TemperingEntries.all();
+		TemperingEntries.Entry iron = entries.stream().filter(e -> e.ingot().is(Items.IRON_INGOT)).findFirst().orElse(null);
+		TemperingEntries.Entry diamond = entries.stream().filter(e -> e.ingot().is(Items.DIAMOND)).findFirst().orElse(null);
+		check(iron != null && iron.items().stream().anyMatch(s -> s.is(Items.IRON_SWORD)) && iron.items().stream().anyMatch(s -> s.is(Items.CHAINMAIL_CHESTPLATE))
+				&& iron.items().stream().anyMatch(s -> s.is(ForgemarkBlocks.SMITHING_HAMMER.get())), "the viewers list iron as tempering iron swords, chainmail and the hammer");
+		check(diamond != null && diamond.items().stream().anyMatch(s -> s.is(Items.DIAMOND_PICKAXE)) && diamond.items().stream().noneMatch(s -> s.is(Items.IRON_PICKAXE)),
+				"...and diamond as tempering diamond pickaxes, not iron ones");
+		check(entries.stream().noneMatch(e -> e.ingot().is(Items.LEATHER)) && entries.stream().flatMap(e -> e.items().stream()).noneMatch(s -> s.is(Items.LEATHER_HELMET) || s.is(Items.BOW)),
+				"leather, leather armour and bows are nowhere in the list");
 	}
 
 	/** The vanilla anvil keeps the better temper when repairing or combining. */

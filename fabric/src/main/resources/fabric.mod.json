@@ -24,6 +24,12 @@
 		],
 		"jade": [
 			"com.gabbymaybelle.forgemark.compat.JadePlugin"
+		],
+		"jei_mod_plugin": [
+			"com.gabbymaybelle.forgemark.compat.JeiPlugin"
+		],
+		"rei_client": [
+			"com.gabbymaybelle.forgemark.compat.ReiPlugin"
 		]
 	},
 	"mixins": [

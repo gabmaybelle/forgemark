@@ -11,6 +11,12 @@ dependencies {
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	// Jade API (loader-neutral), for compat/JadePlugin. Compile only; see fabric/build.gradle.
 	compileOnly "maven.modrinth:jade:${project.jade_fabric_version}"
+	compileOnly "maven.modrinth:jei:${project.jei_fabric_version}"
+	compileOnly "maven.modrinth:rei:${project.rei_fabric_version}"
+	// REI's API refers to these two (architectury fluids, cloth's Point and Rectangle).
+	compileOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
+	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
+	compileOnly "me.shedaniel.cloth:basic-math:${project.basic_math_version}"
 
 	// Plain unit tests for the pure logic (tier maths): `./gradlew :common:test`.
 	testImplementation platform('org.junit:junit-bom:5.11.4')

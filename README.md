@@ -32,6 +32,8 @@ again keeps the better result. Sneak while striking to skip the timing for a sec
 
 The advancements screen has a Forgemark tab that walks you through these steps. With
 [Jade](https://modrinth.com/mod/jade) installed, looking at a hearth or anvil shows what's in it.
+With [JEI](https://modrinth.com/mod/jei) or [REI](https://modrinth.com/mod/rei), a Tempering tab
+shows which ingot tempers what.
 
 **It's in development.** The forge works in singleplayer and on servers; the look is placeholder
 art until the real textures land.

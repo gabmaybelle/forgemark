@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 (2026-10-15)
+
+The first release, for Fabric and NeoForge on Minecraft 26.3. Everything below is in it.
 
 - An advancement trail that teaches the forge: Into the Fire (heat an ingot), Tempered, Hiss (the
   quench), A Steady Hand (a Fine temper), The Patient Way (no-timing mode) and Masterwork.

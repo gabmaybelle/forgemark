@@ -1,0 +1,27 @@
+license = "MIT"
+issueTrackerURL = "https://github.com/gabmaybelle/forgemark/issues"
+
+[[mods]]
+modId = "forgemark"
+version = "${version}"
+displayName = "Forgemark"
+authors = "Gabby"
+description = '''Temper the tools, weapons and armour you already have, from any mod, at a hearth and forging anvil, for a small, capped quality bonus. Crafting is left alone.'''
+displayURL = "https://github.com/gabmaybelle/forgemark"
+
+[[mixins]]
+config = "forgemark.mixins.json"
+
+[[dependencies.forgemark]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.3,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.forgemark]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3,26.4)"
+ordering = "NONE"
+side = "BOTH"

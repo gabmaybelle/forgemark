@@ -1,0 +1,84 @@
+name: Bug report
+description: Something in Forgemark isn't working as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The more detail you give, the faster it gets fixed.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem in a sentence or two.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, step by step, before it went wrong?
+      placeholder: |
+        1. Put an iron pickaxe and an iron ingot on the forging anvil
+        2. Struck five times
+        3. Quenched in a water cauldron
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Loader
+      options:
+        - Fabric
+        - NeoForge
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you playing?
+      options:
+        - Single player
+        - Dedicated server
+        - LAN or Essential world
+    validations:
+      required: true
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      value: "26.3"
+    validations:
+      required: true
+  - type: input
+    id: forgemark-version
+    attributes:
+      label: Forgemark version
+      description: Shown in the mod list, or in the jar's file name.
+    validations:
+      required: true
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other mods installed
+      description: A modpack name, or a list of mods. Mention anything that changes tools, armour or tooltips.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log or crash report
+      description: |
+        Paste `logs/latest.log`, or the newest file in `crash-reports`, from your Minecraft folder. For long logs, upload to https://mclo.gs and paste the link.
+      render: shell
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or video
+      description: Drag images or a short clip here if it helps show the problem.

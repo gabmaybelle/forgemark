@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "forgemark",
+	"version": "${version}",
+	"name": "Forgemark",
+	"description": "Temper the tools, weapons and armour you already have, from any mod, at a hearth and forging anvil, for a small, capped quality bonus. Crafting is left alone.",
+	"authors": [
+		"Gabby"
+	],
+	"contact": {
+		"homepage": "https://github.com/gabmaybelle/forgemark",
+		"sources": "https://github.com/gabmaybelle/forgemark",
+		"issues": "https://github.com/gabmaybelle/forgemark/issues"
+	},
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.gabbymaybelle.forgemark.fabric.ForgemarkFabric"
+		]
+	},
+	"mixins": [
+		"forgemark.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"fabric-api": "*",
+		"minecraft": "~26.3",
+		"java": ">=25"
+	}
+}

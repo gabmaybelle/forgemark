@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "forgemark_gametest",
+	"version": "1.0.0",
+	"name": "Forgemark game tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"com.gabbymaybelle.forgemark.ForgemarkClientTest"
+		]
+	},
+	"depends": {
+		"forgemark": "*"
+	}
+}

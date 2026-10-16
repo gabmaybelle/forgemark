@@ -124,11 +124,5 @@ loom {
 	}
 }
 
-// The game test opens the viewers' Tempering tab for a screenshot when one is installed.
-dependencies {
-	gametestCompileOnly "maven.modrinth:jei:${project.jei_fabric_version}"
-	gametestCompileOnly "maven.modrinth:rei:${project.rei_fabric_version}"
-	gametestCompileOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
-	gametestCompileOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
-	gametestCompileOnly "me.shedaniel.cloth:basic-math:${project.basic_math_version}"
-}
+// The game test opens the viewers' Tempering tab for a screenshot when one is installed; it
+// compiles against the remapped JEI and REI APIs the main source set already has.

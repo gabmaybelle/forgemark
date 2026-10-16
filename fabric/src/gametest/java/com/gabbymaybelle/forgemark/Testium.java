@@ -5,12 +5,14 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Block;
 
 /**
  * A made-up metal from a made-up mod, for the test: an ingot that is in none of Forgemark's
@@ -21,25 +23,55 @@ import net.minecraft.world.item.ToolMaterial;
 public final class Testium implements ModInitializer {
 	public static final String MOD_ID = "forgemark_gametest";
 	public static final TagKey<Item> REPAIRS = TagKey.create(Registries.ITEM, id("testium_tool_materials"));
-	/** Iron's numbers. */
-	private static final ToolMaterial MATERIAL = new ToolMaterial(BlockTags.INCORRECT_FOR_IRON_TOOL, 250, 6.0F, 2.0F, 14, REPAIRS);
+	/** Iron's numbers, as a 1.21.1 tool tier repaired through the mod's own tag. */
+	private static final Tier MATERIAL = new Tier() {
+		@Override
+		public int getUses() {
+			return 250;
+		}
 
-	public static final Supplier<Item> INGOT = item("testium_ingot", props -> new Item(props));
-	public static final Supplier<Item> NUGGET = item("testium_nugget", props -> new Item(props));
-	public static final Supplier<Item> SWORD = item("testium_sword", props -> new Item(props.sword(MATERIAL, 3.0F, -2.4F)));
+		@Override
+		public float getSpeed() {
+			return 6.0F;
+		}
+
+		@Override
+		public float getAttackDamageBonus() {
+			return 2.0F;
+		}
+
+		@Override
+		public TagKey<Block> getIncorrectBlocksForDrops() {
+			return BlockTags.INCORRECT_FOR_IRON_TOOL;
+		}
+
+		@Override
+		public int getEnchantmentValue() {
+			return 14;
+		}
+
+		@Override
+		public Ingredient getRepairIngredient() {
+			return Ingredient.of(REPAIRS);
+		}
+	};
+
+	public static final Supplier<Item> INGOT = item("testium_ingot", () -> new Item(new Item.Properties()));
+	public static final Supplier<Item> NUGGET = item("testium_nugget", () -> new Item(new Item.Properties()));
+	public static final Supplier<Item> SWORD = item("testium_sword",
+			() -> new SwordItem(MATERIAL, new Item.Properties().attributes(SwordItem.createAttributes(MATERIAL, 3, -2.4F))));
 
 	@Override
 	public void onInitialize() {
 		// Loading the class is the registration.
 	}
 
-	private static Identifier id(String name) {
-		return Identifier.fromNamespaceAndPath(MOD_ID, name);
+	private static ResourceLocation id(String name) {
+		return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
 	}
 
-	private static Supplier<Item> item(String name, java.util.function.Function<Item.Properties, Item> factory) {
-		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id(name));
-		Item item = Registry.register(BuiltInRegistries.ITEM, key, factory.apply(new Item.Properties().setId(key)));
+	private static Supplier<Item> item(String name, Supplier<Item> factory) {
+		Item item = Registry.register(BuiltInRegistries.ITEM, id(name), factory.get());
 		return () -> item;
 	}
 }

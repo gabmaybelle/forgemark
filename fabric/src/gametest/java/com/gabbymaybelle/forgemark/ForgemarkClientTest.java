@@ -13,10 +13,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldSave;
+import com.gabbymaybelle.forgemark.harness.ClientGameTest;
+import com.gabbymaybelle.forgemark.harness.ClientGameTestContext;
+import com.gabbymaybelle.forgemark.harness.TestSingleplayerContext;
+import com.gabbymaybelle.forgemark.harness.TestWorldSave;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -25,7 +25,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -58,7 +58,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>The expected numbers are written out by hand from the design doc's tier table, never
  * read back from the code under test.
  */
-public class ForgemarkClientTest implements FabricClientGameTest {
+public class ForgemarkClientTest implements ClientGameTest {
 	/** Where the tempered pickaxe sits in the player's inventory across the save and reopen. */
 	private static final int SAVED_SLOT = 9;
 	private final List<String> failures = new ArrayList<>();
@@ -69,7 +69,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		settingsFile();
 		TestWorldSave save;
 		try (TestSingleplayerContext world = ctx.worldBuilder().create()) {
-			world.getConnection().waitForChunksRender();
+			world.waitForChunksRender();
 			boolean loaded = world.getServer().computeOnServer(server -> FabricLoader.getInstance().isModLoaded(Forgemark.MOD_ID));
 			check(loaded, "the mod is loaded in a new world");
 			check(Services.PLATFORM.name().equals("Fabric"), "the Fabric platform is the one in use");
@@ -97,7 +97,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 			save = world.getWorldSave();
 		}
 		try (TestSingleplayerContext world = save.open()) {
-			world.getConnection().waitForChunksRender();
+			world.waitForChunksRender();
 			world.getServer().runOnServer(server -> {
 				forge.afterReopen(server);
 				ItemStack keepsake = player(server).getInventory().getItem(SAVED_SLOT);
@@ -212,8 +212,8 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		ItemAttributeModifiers own = affixed.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 		ItemAttributeModifiers.Builder withAffix = ItemAttributeModifiers.builder();
 		own.modifiers().forEach(entry -> withAffix.add(entry.attribute(), entry.modifier(), entry.slot()));
-		withAffix.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Identifier.fromNamespaceAndPath("apotheosis", "test_affix"), 3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
-		withAffix.add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(Identifier.fromNamespaceAndPath("tiered", "test_bonus"), 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+		withAffix.add(Attributes.ATTACK_DAMAGE, new AttributeModifier(ResourceLocation.fromNamespaceAndPath("apotheosis", "test_affix"), 3, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+		withAffix.add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(ResourceLocation.fromNamespaceAndPath("tiered", "test_bonus"), 1, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
 		affixed.set(DataComponents.ATTRIBUTE_MODIFIERS, withAffix.build());
 		check(near(modifierAmount(affixed, EquipmentSlot.MAINHAND, "apotheosis:test_affix"), 3) && near(modifierAmount(affixed, EquipmentSlot.MAINHAND, "tiered:test_bonus"), 1),
 				"another quality mod's own modifiers aren't multiplied by the temper (got " + modifierAmount(affixed, EquipmentSlot.MAINHAND, "apotheosis:test_affix") + ")");
@@ -370,7 +370,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 		ItemStack diamond = tempered(Items.DIAMOND_PICKAXE, Temper.of(Tier.SUPERIOR, true, null));
 		SmithingRecipeInput input = new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), diamond, new ItemStack(Items.NETHERITE_INGOT));
 		ItemStack upgraded = server.getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, server.overworld())
-				.map(recipe -> recipe.value().assemble(input)).orElse(ItemStack.EMPTY);
+				.map(recipe -> recipe.value().assemble(input, server.registryAccess())).orElse(ItemStack.EMPTY);
 		Temper temper = Temper.on(upgraded);
 		check(upgraded.is(Items.NETHERITE_PICKAXE) && temper != null && temper.tier() == Tier.SUPERIOR && temper.quenched(), "the smithing table carries the temper over to netherite");
 		// Netherite: 2031 max damage, speed 9. Superior quenched: +7% durability, +8% speed.
@@ -421,7 +421,7 @@ public class ForgemarkClientTest implements FabricClientGameTest {
 	/** The same through the walk the tooltip uses. */
 	private static double modifierTotal(ItemStack stack, EquipmentSlot slot, Holder<Attribute> attribute, EquipmentSlotGroup group) {
 		double[] total = {0};
-		stack.forEachModifier(group, (a, modifier, display) -> {
+		stack.forEachModifier(group, (a, modifier) -> {
 			if (a.value() == attribute.value()) {
 				total[0] += modifier.amount();
 			}

@@ -8,7 +8,10 @@
 		"main": [
 			"com.gabbymaybelle.forgemark.Testium"
 		],
-		"fabric-client-gametest": [
+		"client": [
+			"com.gabbymaybelle.forgemark.harness.GameTestRunner"
+		],
+		"forgemark:gametest": [
 			"com.gabbymaybelle.forgemark.ForgemarkClientTest"
 		],
 		"jei_mod_plugin": [

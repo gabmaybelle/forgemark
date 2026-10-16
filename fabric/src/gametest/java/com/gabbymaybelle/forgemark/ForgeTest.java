@@ -14,12 +14,12 @@ import com.gabbymaybelle.forgemark.quality.Temper;
 import com.gabbymaybelle.forgemark.quality.Tier;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import com.gabbymaybelle.forgemark.harness.ClientGameTestContext;
+import com.gabbymaybelle.forgemark.harness.TestSingleplayerContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -131,7 +131,7 @@ final class ForgeTest {
 
 	/** Whether the player has one of Forgemark's advancements. */
 	private static boolean done(ServerPlayer player, String name) {
-		return player.getAdvancements().getOrStartProgress(player.level().getServer().getAdvancements().get(Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, name))).isDone();
+		return player.getAdvancements().getOrStartProgress(player.level().getServer().getAdvancements().get(ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, name))).isDone();
 	}
 
 	private void hearth(ServerLevel level, ServerPlayer player) {
@@ -365,7 +365,7 @@ final class ForgeTest {
 		ItemStack worn = new ItemStack(Items.IRON_PICKAXE);
 		worn.setDamageValue(worn.getMaxDamage() - 1);
 		forge(level, player, worn, 0, 0, 5);
-		check.accept(Temper.on(worn) != null && Temper.on(worn).tier() == Tier.ROUGH && !worn.isBroken() && worn.getDamageValue() == worn.getMaxDamage() - 1,
+		check.accept(Temper.on(worn) != null && Temper.on(worn).tier() == Tier.ROUGH && worn.getDamageValue() == worn.getMaxDamage() - 1,
 				"a Rough temper on a nearly worn-out pickaxe leaves it one use from breaking, not broken");
 
 		// Eligibility now that the ingot must be heatable.
@@ -375,7 +375,7 @@ final class ForgeTest {
 
 		// Another mod's sword, repaired through that mod's own tag, tempered with that mod's ingot.
 		ItemStack testiumSword = new ItemStack(Testium.SWORD.get());
-		check.accept(Quality.isTemperable(testiumSword) && testiumSword.isValidRepairItem(new ItemStack(Testium.INGOT.get())) && !testiumSword.isValidRepairItem(new ItemStack(Items.IRON_INGOT)),
+		check.accept(Quality.isTemperable(testiumSword) && Metal.repairs(testiumSword, new ItemStack(Testium.INGOT.get())) && !Metal.repairs(testiumSword, new ItemStack(Items.IRON_INGOT)),
 				"a modded sword repaired through its own tag can be tempered, and asks for its own ingot");
 		check.accept(forge(level, player, testiumSword, Testium.INGOT.get(), 2, 3, 0) == Tier.SUPERIOR, "...and reaches Superior with two perfect and three good strikes on its ingot");
 	}
@@ -389,19 +389,19 @@ final class ForgeTest {
 		if (!FabricLoader.getInstance().isModLoaded("beyond_the_dragon")) {
 			return;
 		}
-		Item ingotItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_ingot"));
-		Item swordItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_sword"));
+		Item ingotItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("beyond_the_dragon", "aphelite_ingot"));
+		Item swordItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("beyond_the_dragon", "aphelite_sword"));
 		ItemStack ingot = new ItemStack(ingotItem);
 		ItemStack sword = new ItemStack(swordItem);
 		check.accept(!sword.is(Items.AIR) && !ingot.is(Items.AIR), "Beyond the Dragon's aphelite sword and ingot are there");
 		check.accept(Metal.isHeatable(ingot) && Metal.heatTicks(ingot) == Metal.SLOW_HEAT_TICKS && Metal.strikesPerHeat(ingot) == Metal.HARD_STRIKES_PER_HEAT,
 				"an aphelite ingot heats slowly and is good for four strikes, like netherite");
-		check.accept(Quality.isTemperable(sword) && sword.isValidRepairItem(ingot) && !sword.isValidRepairItem(new ItemStack(Items.NETHERITE_INGOT)),
+		check.accept(Quality.isTemperable(sword) && Metal.repairs(sword, ingot) && !Metal.repairs(sword, new ItemStack(Items.NETHERITE_INGOT)),
 				"an aphelite sword can be tempered and asks for aphelite, not netherite");
 		int base = sword.getMaxDamage();
 		check.accept(forge(level, player, sword, ingotItem, 5, 0, 0) == Tier.MASTERWORK, "five perfect strikes with aphelite make it Masterwork");
 		check.accept(sword.getMaxDamage() == Math.round(base * 1.15F), "...with +15% durability worked out from aphelite's own " + base + " (got " + sword.getMaxDamage() + ")");
-		ItemStack pickaxe = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("beyond_the_dragon", "aphelite_pickaxe")));
+		ItemStack pickaxe = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("beyond_the_dragon", "aphelite_pickaxe")));
 		check.accept(forge(level, player, pickaxe, ingotItem, 0, 5, 0) == Tier.FINE, "five good strikes make an aphelite pickaxe Fine");
 	}
 

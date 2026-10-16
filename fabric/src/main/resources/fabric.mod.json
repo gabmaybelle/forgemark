@@ -36,7 +36,7 @@
 		"forgemark.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.19.5",
+		"fabricloader": ">=0.15.11",
 		"fabric-api": ">=0.116.0",
 		"minecraft": "1.21.1",
 		"java": ">=21"

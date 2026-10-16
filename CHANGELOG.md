@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3+1.21.1 (2026-10-16)
+
+- The Fabric jar now loads on Fabric Loader 0.15.11 and newer, the same as Fabric API. 0.1.2+1.21.1
+  asked for 0.19.5, which many 1.21.1 launchers and modpacks don't have yet.
+
 ## 0.1.2+1.21.1 (2026-10-16)
 
 - Forgemark now comes for Minecraft 1.21.1 too, on Fabric and on NeoForge: the same hearth,

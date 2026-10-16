@@ -174,7 +174,7 @@ public final class Quality {
 			return damage;
 		}
 		double[] bonus = {0};
-		weapon.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+		modifiers(weapon).forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
 			if (is(attribute, Attributes.ATTACK_DAMAGE)) {
 				bonus[0] += adjust(temper, attribute, modifier).amount() - modifier.amount();
 			}
@@ -207,9 +207,23 @@ public final class Quality {
 		return hasModifier(item, Attributes.ARMOR);
 	}
 
+	/**
+	 * The item's attribute modifiers. On 1.21.1 vanilla armour keeps its armour and toughness in
+	 * the item itself rather than in the component (ArmorItem's default modifiers), the way
+	 * {@code ItemStack.forEachModifier} reads them, so an empty component falls back to those.
+	 */
+	@SuppressWarnings("deprecation")
+	private static ItemAttributeModifiers modifiers(DataComponentHolder item) {
+		ItemAttributeModifiers modifiers = item.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+		if (modifiers.modifiers().isEmpty() && item instanceof ItemStack stack) {
+			return stack.getItem().getDefaultAttributeModifiers();
+		}
+		return modifiers;
+	}
+
 	/** Whether the item adds to an attribute (a modifier above zero, like armour's +6). */
 	private static boolean hasModifier(DataComponentHolder item, Holder<Attribute> attribute) {
-		for (ItemAttributeModifiers.Entry entry : item.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
+		for (ItemAttributeModifiers.Entry entry : modifiers(item).modifiers()) {
 			if (is(entry.attribute(), attribute) && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE && entry.modifier().amount() > 0) {
 				return true;
 			}
@@ -219,7 +233,7 @@ public final class Quality {
 
 	/** Whether the item carries any modifier for an attribute, even a +0 one (iron armour's toughness). */
 	private static boolean hasAnyModifier(DataComponentHolder item, Holder<Attribute> attribute) {
-		for (ItemAttributeModifiers.Entry entry : item.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
+		for (ItemAttributeModifiers.Entry entry : modifiers(item).modifiers()) {
 			if (is(entry.attribute(), attribute) && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) {
 				return true;
 			}

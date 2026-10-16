@@ -7,7 +7,8 @@ import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 
 /**
- * Makes a fresh singleplayer world through the game's own create-world screen: flat, creative,
+ * Makes a fresh singleplayer world through the game's own create-world screen: flat, survival
+ * (so tools wear and fire charges get used up, as on 26.x),
  * commands on, and seed 1, the seed Fabric's client game test gives its worlds on 26.x, so the
  * seed scans count the same starts every run. FORGEMARK_SEED in the environment picks another seed.
  */
@@ -34,7 +35,7 @@ public final class TestWorldBuilder {
 		ctx.runOnClient(mc -> {
 			WorldCreationUiState ui = ((CreateWorldScreen) mc.screen).getUiState();
 			ui.setName("Forgemark test");
-			ui.setGameMode(WorldCreationUiState.SelectedGameMode.CREATIVE);
+			ui.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL);
 			ui.setAllowCommands(true);
 			ui.setSeed(seed);
 			ui.getNormalPresetList().stream().filter(entry -> entry.preset().is(WorldPresets.FLAT)).findFirst().ifPresent(ui::setWorldType);

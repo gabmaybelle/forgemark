@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -19,7 +19,7 @@ public final class Glowing {
 	/** How long a finished item stays hot enough to quench: 15 seconds. */
 	public static final int TICKS = 300;
 
-	public static final Identifier ID = Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "glowing");
+	public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, "glowing");
 	private static final Supplier<DataComponentType<?>> REGISTERED = Services.PLATFORM.register(Registries.DATA_COMPONENT_TYPE, ID,
 			() -> DataComponentType.<Long>builder().persistent(Codec.LONG).networkSynchronized(ByteBufCodecs.VAR_LONG).build());
 

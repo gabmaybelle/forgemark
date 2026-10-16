@@ -8,14 +8,14 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.types.IRecipeType;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.AbstractRecipeCategory;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * JEI's "Tempering" tab: one entry per ingot or gem, with the items it tempers, from
@@ -24,10 +24,10 @@ import net.minecraft.resources.Identifier;
  */
 @mezz.jei.api.JeiPlugin
 public class JeiPlugin implements IModPlugin {
-	public static final IRecipeType<TemperingEntries.Entry> TEMPERING = IRecipeType.create("forgemark", "tempering", TemperingEntries.Entry.class);
+	public static final RecipeType<TemperingEntries.Entry> TEMPERING = RecipeType.create("forgemark", "tempering", TemperingEntries.Entry.class);
 
 	@Override
-	public Identifier getPluginUid() {
+	public ResourceLocation getPluginUid() {
 		return ForgemarkBlocks.id("jei");
 	}
 
@@ -43,7 +43,7 @@ public class JeiPlugin implements IModPlugin {
 
 	@Override
 	public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-		registration.addCraftingStation(TEMPERING, ForgemarkBlocks.HEARTH_ITEM.get(), ForgemarkBlocks.FORGING_ANVIL_ITEM.get(), ForgemarkBlocks.SMITHING_HAMMER.get());
+		registration.addRecipeCatalysts(TEMPERING, ForgemarkBlocks.HEARTH_ITEM.get(), ForgemarkBlocks.FORGING_ANVIL_ITEM.get(), ForgemarkBlocks.SMITHING_HAMMER.get());
 	}
 
 	public static class Category extends AbstractRecipeCategory<TemperingEntries.Entry> {
@@ -56,13 +56,13 @@ public class JeiPlugin implements IModPlugin {
 
 		@Override
 		public void setRecipe(IRecipeLayoutBuilder builder, TemperingEntries.Entry entry, IFocusGroup focuses) {
-			builder.addInputSlot(1, 1).setStandardSlotBackground().add(entry.ingot());
-			builder.addSlot(RecipeIngredientRole.CRAFTING_STATION, 23, 1).setStandardSlotBackground().add(ForgemarkBlocks.SMITHING_HAMMER.get());
+			builder.addInputSlot(1, 1).setStandardSlotBackground().addItemStack(entry.ingot());
+			builder.addSlot(RecipeIngredientRole.CATALYST, 23, 1).setStandardSlotBackground().addItemLike(ForgemarkBlocks.SMITHING_HAMMER.get());
 			builder.addOutputSlot(78, 1).setOutputSlotBackground().addItemStacks(entry.items());
 		}
 
 		@Override
-		public void draw(TemperingEntries.Entry entry, IRecipeSlotsView slots, GuiGraphicsExtractor graphics, double mouseX, double mouseY) {
+		public void draw(TemperingEntries.Entry entry, IRecipeSlotsView slots, GuiGraphics graphics, double mouseX, double mouseY) {
 			arrow.draw(graphics, 46, 1);
 		}
 	}

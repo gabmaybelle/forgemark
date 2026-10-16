@@ -11,11 +11,11 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentGetter;
+import net.minecraft.core.component.DataComponentHolder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -26,9 +26,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
-import net.minecraft.world.item.enchantment.Repairable;
-import org.apache.commons.lang3.function.TriConsumer;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The quality maths. Everything here is worked out on the spot from a {@link Temper} and the
@@ -49,7 +47,7 @@ public final class Quality {
 	/** What a player hits for with nothing in hand; the tooltip adds it to a weapon's own damage. */
 	private static final double PLAYER_BASE_ATTACK_DAMAGE = 1.0;
 	/** The flat toughness modifier for armour that has no toughness modifier of its own. */
-	public static final Identifier TOUGHNESS_ID = Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "toughness");
+	public static final ResourceLocation TOUGHNESS_ID = ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, "toughness");
 
 	/**
 	 * Mods whose own quality bonuses arrive as extra attribute modifiers on the item. Those are
@@ -149,24 +147,8 @@ public final class Quality {
 		};
 	}
 
-	/** The same for the walk the tooltip uses. */
-	public static TriConsumer<Holder<Attribute>, AttributeModifier, ItemAttributeModifiers.Display> wrap(
-			ItemStack stack, TriConsumer<Holder<Attribute>, AttributeModifier, ItemAttributeModifiers.Display> consumer) {
-		Temper temper = Temper.on(stack);
-		if (temper == null) {
-			return consumer;
-		}
-		boolean addToughness = needsToughnessModifier(stack, temper);
-		return (attribute, modifier, display) -> {
-			consumer.accept(attribute, adjust(temper, attribute, modifier), display);
-			if (addToughness && is(attribute, Attributes.ARMOR)) {
-				consumer.accept(Attributes.ARMOR_TOUGHNESS, toughnessModifier(temper), ItemAttributeModifiers.Display.attributeModifiers());
-			}
-		};
-	}
-
 	/** Armour with no toughness modifier of its own (some modded sets) gets a separate one. */
-	private static boolean needsToughnessModifier(DataComponentGetter item, Temper temper) {
+	private static boolean needsToughnessModifier(DataComponentHolder item, Temper temper) {
 		return toughness(temper) != 0 && hasModifier(item, Attributes.ARMOR) && !hasAnyModifier(item, Attributes.ARMOR_TOUGHNESS);
 	}
 
@@ -203,28 +185,30 @@ public final class Quality {
 	// What kind of item it is
 
 	/**
-	 * Mines things: has a Tool component that works in creative. A sword's Tool only covers
-	 * cobwebs and is flagged as not breaking blocks in creative, so it counts as a weapon only.
+	 * Mines things: has a Tool component made for digging. A sword's Tool only covers cobwebs and
+	 * wears twice as fast per block, so it counts as a weapon only.
 	 */
-	public static boolean isTool(DataComponentGetter item) {
+	public static boolean isTool(DataComponentHolder item) {
 		Tool tool = item.get(DataComponents.TOOL);
-		return tool != null && tool.canDestroyBlocksInCreative();
+		// On 1.21.1 a sword's or mace's Tool wears 2 durability per block and a digging tool's 1
+		// (SwordItem, MaceItem and Tier.createToolProperties); 26.x says it with canDestroyBlocksInCreative.
+		return tool != null && tool.damagePerBlock() <= 1;
 	}
 
 	/**
 	 * Hits things: adds attack damage. Vanilla's pickaxes, shovels and hoes do too, and get the
 	 * damage bonus along with their mining speed; the tooltip says so.
 	 */
-	public static boolean isWeapon(DataComponentGetter item) {
+	public static boolean isWeapon(DataComponentHolder item) {
 		return hasModifier(item, Attributes.ATTACK_DAMAGE);
 	}
 
-	public static boolean isArmor(DataComponentGetter item) {
+	public static boolean isArmor(DataComponentHolder item) {
 		return hasModifier(item, Attributes.ARMOR);
 	}
 
 	/** Whether the item adds to an attribute (a modifier above zero, like armour's +6). */
-	private static boolean hasModifier(DataComponentGetter item, Holder<Attribute> attribute) {
+	private static boolean hasModifier(DataComponentHolder item, Holder<Attribute> attribute) {
 		for (ItemAttributeModifiers.Entry entry : item.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
 			if (is(entry.attribute(), attribute) && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE && entry.modifier().amount() > 0) {
 				return true;
@@ -234,7 +218,7 @@ public final class Quality {
 	}
 
 	/** Whether the item carries any modifier for an attribute, even a +0 one (iron armour's toughness). */
-	private static boolean hasAnyModifier(DataComponentGetter item, Holder<Attribute> attribute) {
+	private static boolean hasAnyModifier(DataComponentHolder item, Holder<Attribute> attribute) {
 		for (ItemAttributeModifiers.Entry entry : item.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers()) {
 			if (is(entry.attribute(), attribute) && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) {
 				return true;
@@ -253,8 +237,7 @@ public final class Quality {
 		if (stack.isEmpty() || !stack.has(DataComponents.MAX_DAMAGE) || stack.is(ForgemarkTags.NOT_TEMPERABLE)) {
 			return false;
 		}
-		Repairable repairable = stack.get(DataComponents.REPAIRABLE);
-		if (repairable == null || repairable.items().stream().noneMatch(material -> Metal.isHeatable(new ItemStack(material)))) {
+		if (!Metal.hasHeatableRepairMaterial(stack)) {
 			return false;
 		}
 		if (isTool(stack)) {
@@ -269,7 +252,7 @@ public final class Quality {
 	// Tooltip
 
 	/** The tier line, the bonus line and, on a Masterwork item, the maker's mark. */
-	public static List<Component> tooltip(Temper temper, DataComponentGetter item) {
+	public static List<Component> tooltip(Temper temper, DataComponentHolder item) {
 		List<Component> lines = new ArrayList<>(3);
 		Tier tier = effectiveTier(temper);
 		lines.add(Component.translatable(temper.quenched() ? "forgemark.tooltip.tier.quenched" : "forgemark.tooltip.tier", tier.displayName())
@@ -294,6 +277,17 @@ public final class Quality {
 			lines.add(Component.translatable("forgemark.tooltip.maker", temper.maker().get()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 		}
 		return lines;
+	}
+
+	/**
+	 * Adds the temper's lines under the item's name, for the loaders' tooltip events: 1.21.1 only
+	 * draws tooltips for vanilla's own components, so a mod's component can't add its own.
+	 */
+	public static void addTooltip(ItemStack stack, List<Component> lines) {
+		Temper temper = Temper.on(stack);
+		if (temper != null && !lines.isEmpty()) {
+			lines.addAll(1, tooltip(temper, stack));
+		}
 	}
 
 	private static String percent(double value) {

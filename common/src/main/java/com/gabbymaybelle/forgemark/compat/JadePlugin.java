@@ -8,7 +8,7 @@ import com.gabbymaybelle.forgemark.forge.Forging;
 import com.gabbymaybelle.forgemark.forge.HearthBlock;
 import com.gabbymaybelle.forgemark.forge.HearthBlockEntity;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
@@ -59,7 +59,7 @@ public class JadePlugin implements IWailaPlugin {
 		}
 
 		@Override
-		public Identifier getUid() {
+		public ResourceLocation getUid() {
 			return ForgemarkBlocks.id("hearth");
 		}
 	}
@@ -85,7 +85,7 @@ public class JadePlugin implements IWailaPlugin {
 		}
 
 		@Override
-		public Identifier getUid() {
+		public ResourceLocation getUid() {
 			return ForgemarkBlocks.id("forging_anvil");
 		}
 	}

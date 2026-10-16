@@ -7,11 +7,13 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Optional;
 import java.util.function.Supplier;
-import net.minecraft.advancements.triggers.CriterionTrigger;
-import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
+import net.minecraft.advancements.CriterionTrigger;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
@@ -24,7 +26,7 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
  * on it by {@code tools/gen-data.js}.
  */
 public class TemperedTrigger extends SimpleCriterionTrigger<TemperedTrigger.Instance> {
-	public static final Identifier ID = ForgemarkBlocks.id("tempered");
+	public static final ResourceLocation ID = ForgemarkBlocks.id("tempered");
 	private static final Supplier<CriterionTrigger<?>> REGISTERED = Services.PLATFORM.register(Registries.TRIGGER_TYPE, ID, TemperedTrigger::new);
 
 	/** Loads this class, which queues the trigger's registration. */
@@ -45,10 +47,10 @@ public class TemperedTrigger extends SimpleCriterionTrigger<TemperedTrigger.Inst
 		trigger(player, instance -> instance.matches(temper, noTiming));
 	}
 
-	public record Instance(Optional<Holder<LootItemCondition>> player, Optional<Tier> tier, Optional<Boolean> quenched, Optional<Boolean> noTiming)
+	public record Instance(Optional<ContextAwarePredicate> player, Optional<Tier> tier, Optional<Boolean> quenched, Optional<Boolean> noTiming)
 			implements SimpleCriterionTrigger.SimpleInstance {
 		public static final Codec<Instance> CODEC = RecordCodecBuilder.create(i -> i.group(
-				LootItemCondition.CODEC.optionalFieldOf("player").forGetter(Instance::player),
+				EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player),
 				Tier.CODEC.optionalFieldOf("tier").forGetter(Instance::tier),
 				Codec.BOOL.optionalFieldOf("quenched").forGetter(Instance::quenched),
 				Codec.BOOL.optionalFieldOf("no_timing").forGetter(Instance::noTiming)

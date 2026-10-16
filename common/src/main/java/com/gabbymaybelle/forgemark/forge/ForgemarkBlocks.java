@@ -2,15 +2,13 @@ package com.gabbymaybelle.forgemark.forge;
 
 import com.gabbymaybelle.forgemark.Forgemark;
 import com.gabbymaybelle.forgemark.platform.Services;
-import java.util.Set;
 import java.util.function.Supplier;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -25,46 +23,39 @@ import net.minecraft.world.level.material.MapColor;
 public final class ForgemarkBlocks {
 	public static final Supplier<Block> HEARTH = block("hearth", () -> new HearthBlock(BlockBehaviour.Properties.of()
 			.mapColor(MapColor.COLOR_RED).strength(2.0F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()
-			.lightLevel(state -> state.getValue(HearthBlock.LIT) ? 13 : 0).setId(blockKey("hearth"))));
+			.lightLevel(state -> state.getValue(HearthBlock.LIT) ? 13 : 0)));
 	public static final Supplier<Block> FORGING_ANVIL = block("forging_anvil", () -> new ForgingAnvilBlock(BlockBehaviour.Properties.of()
-			.mapColor(MapColor.METAL).strength(5.0F, 1200.0F).sound(SoundType.ANVIL).noOcclusion().requiresCorrectToolForDrops()
-			.setId(blockKey("forging_anvil"))));
+			.mapColor(MapColor.METAL).strength(5.0F, 1200.0F).sound(SoundType.ANVIL).noOcclusion().requiresCorrectToolForDrops()));
 
-	public static final Supplier<Item> HEARTH_ITEM = item("hearth", () -> new HearthBlock.Item(HEARTH.get(), new Item.Properties().setId(itemKey("hearth")).useBlockDescriptionPrefix()));
+	public static final Supplier<Item> HEARTH_ITEM = item("hearth", () -> new HearthBlock.Item(HEARTH.get(), new Item.Properties()));
 	public static final Supplier<Item> FORGING_ANVIL_ITEM = item("forging_anvil",
-			() -> new ForgingAnvilBlock.Item(FORGING_ANVIL.get(), new Item.Properties().setId(itemKey("forging_anvil")).useBlockDescriptionPrefix()));
+			() -> new ForgingAnvilBlock.Item(FORGING_ANVIL.get(), new Item.Properties()));
 	public static final Supplier<Item> SMITHING_HAMMER = item("smithing_hammer", () -> new SmithingHammerItem(
-			SmithingHammerItem.properties(new Item.Properties().setId(itemKey("smithing_hammer")).durability(250).repairable(Items.IRON_INGOT))));
+			SmithingHammerItem.properties(new Item.Properties().durability(250))));
 
 	public static final Supplier<BlockEntityType<HearthBlockEntity>> HEARTH_ENTITY = blockEntity("hearth",
-			() -> new BlockEntityType<>(HearthBlockEntity::new, Set.of(HEARTH.get())));
+			() -> Services.PLATFORM.blockEntityType(HearthBlockEntity::new, HEARTH.get()));
 	public static final Supplier<BlockEntityType<ForgingAnvilBlockEntity>> FORGING_ANVIL_ENTITY = blockEntity("forging_anvil",
-			() -> new BlockEntityType<>(ForgingAnvilBlockEntity::new, Set.of(FORGING_ANVIL.get())));
+			() -> Services.PLATFORM.blockEntityType(ForgingAnvilBlockEntity::new, FORGING_ANVIL.get()));
 
 	private ForgemarkBlocks() {
 	}
 
 	/** Loads this class, which queues every registration, and files the items under the creative tabs. */
 	public static void register() {
-		// Vanilla keeps its tab keys private in 26.3; the keys are just ids.
-		ResourceKey<CreativeModeTab> functional = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("functional_blocks"));
-		ResourceKey<CreativeModeTab> tools = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities"));
+		// The tab keys are just ids.
+		ResourceKey<CreativeModeTab> functional = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.withDefaultNamespace("functional_blocks"));
+		ResourceKey<CreativeModeTab> tools = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.withDefaultNamespace("tools_and_utilities"));
 		Services.PLATFORM.addToCreativeTab(functional, HEARTH_ITEM);
 		Services.PLATFORM.addToCreativeTab(functional, FORGING_ANVIL_ITEM);
 		Services.PLATFORM.addToCreativeTab(tools, SMITHING_HAMMER);
 	}
 
-	public static Identifier id(String name) {
-		return Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, name);
+	public static ResourceLocation id(String name) {
+		return ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, name);
 	}
 
-	private static ResourceKey<Block> blockKey(String name) {
-		return ResourceKey.create(Registries.BLOCK, id(name));
-	}
 
-	private static ResourceKey<Item> itemKey(String name) {
-		return ResourceKey.create(Registries.ITEM, id(name));
-	}
 
 	private static Supplier<Block> block(String name, Supplier<Block> factory) {
 		return Services.PLATFORM.register(Registries.BLOCK, id(name), factory);

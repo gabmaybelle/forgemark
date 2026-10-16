@@ -41,7 +41,7 @@ public final class TemperingEntries {
 		for (ItemStack ingot : ingots) {
 			List<ItemStack> items = new ArrayList<>();
 			for (ItemStack stack : temperable) {
-				if (stack.isValidRepairItem(ingot)) {
+				if (Metal.repairs(stack, ingot)) {
 					items.add(stack);
 				}
 			}

@@ -6,6 +6,7 @@ import com.gabbymaybelle.forgemark.client.ForgeRenderers;
 import com.gabbymaybelle.forgemark.client.ForgingClient;
 import com.gabbymaybelle.forgemark.forge.ForgemarkBlocks;
 import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlock;
+import com.gabbymaybelle.forgemark.quality.Quality;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -13,6 +14,7 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 /**
  * The client half on NeoForge: the settings packet handler (registered in the main entrypoint)
@@ -25,6 +27,8 @@ public class ForgemarkNeoForgeClient {
 	public ForgemarkNeoForgeClient(IEventBus modBus) {
 		NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> Config.load());
 		ForgingAnvilBlock.clientStrike = ForgingClient::sendStrike;
+		// The temper's lines under the item's name (1.21.1 draws no tooltip for a mod's own component).
+		NeoForge.EVENT_BUS.addListener(ItemTooltipEvent.class, event -> Quality.addTooltip(event.getItemStack(), event.getToolTip()));
 		modBus.addListener(RegisterGuiLayersEvent.class, event -> event.registerAboveAll(ForgingClient.BAR_ID, ForgingClient::render));
 		modBus.addListener(EntityRenderersEvent.RegisterRenderers.class, event -> {
 			event.registerBlockEntityRenderer(ForgemarkBlocks.HEARTH_ENTITY.get(), ForgeRenderers.Hearth::new);

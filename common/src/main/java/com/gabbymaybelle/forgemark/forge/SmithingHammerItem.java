@@ -1,6 +1,6 @@
 package com.gabbymaybelle.forgemark.forge;
 
-import java.util.function.Consumer;
+import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -8,9 +8,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.TooltipDisplay;
 
 /**
  * The smithing hammer: strikes the forging anvil and wears with use like any tool. It hits
@@ -30,7 +30,13 @@ public class SmithingHammerItem extends Item {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> consumer, TooltipFlag flag) {
-		consumer.accept(Component.translatable("item.forgemark.smithing_hammer.desc").withStyle(ChatFormatting.GRAY));
+	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
+		lines.add(Component.translatable("item.forgemark.smithing_hammer.desc").withStyle(ChatFormatting.GRAY));
+	}
+
+	/** Mended with iron at an anvil, like iron tools (26.x says this with the repairable component). */
+	@Override
+	public boolean isValidRepairItem(ItemStack stack, ItemStack repairWith) {
+		return repairWith.is(Items.IRON_INGOT);
 	}
 }

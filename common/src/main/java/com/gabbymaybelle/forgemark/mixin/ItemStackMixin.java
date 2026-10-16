@@ -9,9 +9,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.block.state.BlockState;
-import org.apache.commons.lang3.function.TriConsumer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,8 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * damage or mining speed, and Fabric has none for attribute modifiers, so all three go through
  * these small hooks on the {@code ItemStack} methods every caller uses: the durability bar,
  * the anvil, block breaking, equipping and the tooltip. The methods have the same shape on
- * Fabric and NeoForge (NeoForge's {@code forEachModifier} still hands each modifier to the
- * same consumer), so one mixin serves both.
+ * Fabric and NeoForge (both {@code forEachModifier} overloads hand each modifier to a plain
+ * consumer on 1.21.1), so one mixin serves both.
  */
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
@@ -50,9 +48,8 @@ public abstract class ItemStackMixin {
 		return Quality.wrap((ItemStack) (Object) this, consumer);
 	}
 
-	@ModifyVariable(method = "forEachModifier(Lnet/minecraft/world/entity/EquipmentSlotGroup;Lorg/apache/commons/lang3/function/TriConsumer;)V", at = @At("HEAD"), argsOnly = true)
-	private TriConsumer<Holder<Attribute>, AttributeModifier, ItemAttributeModifiers.Display> forgemark$temperedModifiersForTooltip(
-			TriConsumer<Holder<Attribute>, AttributeModifier, ItemAttributeModifiers.Display> consumer, EquipmentSlotGroup slot) {
+	@ModifyVariable(method = "forEachModifier(Lnet/minecraft/world/entity/EquipmentSlotGroup;Ljava/util/function/BiConsumer;)V", at = @At("HEAD"), argsOnly = true)
+	private BiConsumer<Holder<Attribute>, AttributeModifier> forgemark$temperedModifiersForTooltip(BiConsumer<Holder<Attribute>, AttributeModifier> consumer, EquipmentSlotGroup slot) {
 		return Quality.wrap((ItemStack) (Object) this, consumer);
 	}
 }

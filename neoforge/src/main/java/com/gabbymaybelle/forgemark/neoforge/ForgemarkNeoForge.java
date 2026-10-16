@@ -7,16 +7,12 @@ import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlockEntity;
 import com.gabbymaybelle.forgemark.network.SettingsPayload;
 import com.gabbymaybelle.forgemark.network.StrikePayload;
 import com.gabbymaybelle.forgemark.platform.Services;
-import com.gabbymaybelle.forgemark.quality.Temper;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.tooltip.TooltipAppender;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.RegisterTooltipAppendersEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -41,9 +37,6 @@ public class ForgemarkNeoForge {
 						ForgingAnvilBlockEntity.handleStrike(player, payload);
 					}
 				}));
-		// The temper's own tooltip lines, just above the enchantments.
-		modBus.addListener(RegisterTooltipAppendersEvent.class, event -> event.registerComponentAppenderBefore(
-				Temper.type(), DataComponents.ENCHANTMENTS, TooltipAppender.createComponentAppender(Temper.type())));
 		NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event -> ForgemarkCommands.register(event.getDispatcher()));
 		NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, event -> {
 			if (event.getEntity() instanceof ServerPlayer player) {

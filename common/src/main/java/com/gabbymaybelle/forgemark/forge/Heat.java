@@ -10,9 +10,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The {@code forgemark:heat} component on an ingot that has been in the hearth: how hot it was
@@ -33,7 +33,7 @@ public record Heat(float heat, long at) {
 			ByteBufCodecs.VAR_LONG, Heat::at,
 			Heat::new);
 
-	public static final Identifier ID = Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "heat");
+	public static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, "heat");
 	private static final Supplier<DataComponentType<?>> REGISTERED = Services.PLATFORM.register(Registries.DATA_COMPONENT_TYPE, ID,
 			() -> DataComponentType.<Heat>builder().persistent(CODEC).networkSynchronized(STREAM_CODEC).build());
 

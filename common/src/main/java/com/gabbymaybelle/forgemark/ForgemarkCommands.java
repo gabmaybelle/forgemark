@@ -26,7 +26,7 @@ public final class ForgemarkCommands {
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(Commands.literal(Forgemark.MOD_ID)
-				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.requires(source -> source.hasPermission(2))
 				.then(Commands.literal("temper")
 						.then(Commands.argument("tier", StringArgumentType.word())
 								.suggests((c, b) -> SharedSuggestionProvider.suggest(Arrays.stream(Tier.values()).map(Tier::getSerializedName), b))

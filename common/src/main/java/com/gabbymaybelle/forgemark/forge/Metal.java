@@ -1,5 +1,8 @@
 package com.gabbymaybelle.forgemark.forge;
 
+import net.minecraft.world.item.Item;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import com.gabbymaybelle.forgemark.ForgemarkTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
@@ -57,5 +60,33 @@ public final class Metal {
 			return HARD_STRIKES_PER_HEAT;
 		}
 		return DEFAULT_STRIKES_PER_HEAT;
+	}
+
+	/**
+	 * Whether this ingot (or gem) repairs this item at an anvil, so it's the one that tempers it.
+	 * On 1.21.1 that is the item's own rule: a tool's tier or armour's material says which
+	 * ingredient mends it, and modded gear answers the same question by overriding it.
+	 */
+	public static boolean repairs(ItemStack item, ItemStack ingot) {
+		return !item.isEmpty() && !ingot.isEmpty() && item.getItem().isValidRepairItem(item, ingot);
+	}
+
+	private static final Map<Item, Boolean> HEATABLE_REPAIR = new ConcurrentHashMap<>();
+
+	/**
+	 * Whether anything heatable repairs this item, so the forge can temper it. 1.21.1 has no list
+	 * of repair items on the item, so every heatable item is asked once per kind of item (the
+	 * answer is kept: it can't change while the game runs).
+	 */
+	public static boolean hasHeatableRepairMaterial(ItemStack item) {
+		return HEATABLE_REPAIR.computeIfAbsent(item.getItem(), kind -> {
+			for (Item candidate : BuiltInRegistries.ITEM) {
+				ItemStack ingot = new ItemStack(candidate);
+				if (isHeatable(ingot) && repairs(item, ingot)) {
+					return true;
+				}
+			}
+			return false;
+		});
 	}
 }

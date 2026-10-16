@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * The settings a client needs to show and work out the same numbers as the server: sent to
@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
  * send it; {@link Config#applyFromServer} takes it in on the client.
  */
 public record SettingsPayload(int bonusScale, String maxTier, boolean makersMark) implements CustomPacketPayload {
-	public static final Type<SettingsPayload> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "settings"));
+	public static final Type<SettingsPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, "settings"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, SettingsPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, SettingsPayload::bonusScale,
 			ByteBufCodecs.STRING_UTF8, SettingsPayload::maxTier,

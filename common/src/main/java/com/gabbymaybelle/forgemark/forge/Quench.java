@@ -46,7 +46,7 @@ public final class Quench {
 			if (level instanceof ServerLevel serverLevel) {
 				serverLevel.sendParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 8, 0.2, 0.1, 0.2, 0.02);
 			}
-			player.sendOverlayMessage(Component.translatable("forgemark.quenched", stack.getHoverName()));
+			player.displayClientMessage(Component.translatable("forgemark.quenched", stack.getHoverName()), true);
 		}
 		return true;
 	}

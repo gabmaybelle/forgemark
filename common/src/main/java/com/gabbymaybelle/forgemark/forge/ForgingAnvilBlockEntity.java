@@ -26,8 +26,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -162,14 +160,14 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 		float heat = ingotHeat(now);
 		float cost = strikeCost();
 		if (heat < cost - 0.001F) {
-			player.sendOverlayMessage(Component.translatable("forgemark.anvil.reheat"));
+			player.displayClientMessage(Component.translatable("forgemark.anvil.reheat"), true);
 			level.playSound(null, getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.3F, 0.5F);
 			return;
 		}
 		int score;
 		if (player.isShiftKeyDown() && Config.noTimingMode) {
 			if (countMatchingIngots(player.getInventory()) < Config.noTimingCost - 1) {
-				player.sendOverlayMessage(Component.translatable("forgemark.anvil.no_timing_ingots", Config.noTimingCost));
+				player.displayClientMessage(Component.translatable("forgemark.anvil.no_timing_ingots", Config.noTimingCost), true);
 				return;
 			}
 			noTiming = true;
@@ -186,7 +184,7 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 		if (level instanceof ServerLevel serverLevel) {
 			serverLevel.sendParticles(ParticleTypes.CRIT, getBlockPos().getX() + 0.5, getBlockPos().getY() + 1.1, getBlockPos().getZ() + 0.5, 2 + score * 2, 0.15, 0.05, 0.15, 0.1);
 		}
-		player.sendOverlayMessage(Component.translatable("forgemark.bar.hit." + score));
+		player.displayClientMessage(Component.translatable("forgemark.bar.hit." + score), true);
 		if (strikes.size() >= Forging.STRIKES) {
 			finish(player, now);
 		} else {
@@ -210,9 +208,9 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 			if (item.isDamageableItem() && item.getDamageValue() >= item.getMaxDamage()) {
 				item.setDamageValue(item.getMaxDamage() - 1);
 			}
-			player.sendOverlayMessage(Component.translatable("forgemark.anvil.forged", item.getHoverName(), tier.displayName()));
+			player.displayClientMessage(Component.translatable("forgemark.anvil.forged", item.getHoverName(), tier.displayName()), true);
 		} else {
-			player.sendOverlayMessage(Component.translatable("forgemark.anvil.kept", item.getHoverName(), old.tier().displayName()));
+			player.displayClientMessage(Component.translatable("forgemark.anvil.kept", item.getHoverName(), old.tier().displayName()), true);
 		}
 		// The advancement trail hears about the tier the strikes earned, whether or not the item kept a better one.
 		TemperedTrigger.get().trigger(player, Temper.of(tier, false, null), noTiming);
@@ -235,7 +233,7 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 		int count = 0;
 		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			if (Metal.isHeatable(stack) && item.isValidRepairItem(stack)) {
+			if (Metal.isHeatable(stack) && Metal.repairs(item, stack)) {
 				count += stack.getCount();
 			}
 		}
@@ -245,7 +243,7 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 	private void takeMatchingIngots(Inventory inventory, int count) {
 		for (int slot = 0; slot < inventory.getContainerSize() && count > 0; slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			if (Metal.isHeatable(stack) && item.isValidRepairItem(stack)) {
+			if (Metal.isHeatable(stack) && Metal.repairs(item, stack)) {
 				int taken = Math.min(count, stack.getCount());
 				stack.shrink(taken);
 				count -= taken;
@@ -262,32 +260,32 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		output.store("item", ItemStack.OPTIONAL_CODEC, item);
-		output.store("ingot", ItemStack.OPTIONAL_CODEC, ingot);
-		output.putIntArray("strikes", strikes.stream().mapToInt(Integer::intValue).toArray());
-		output.putLong("sweep_start", sweepStart);
-		output.putFloat("zone_center", zoneCenter);
-		output.putBoolean("no_timing", noTiming);
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
+		tag.put("item", item.saveOptional(registries));
+		tag.put("ingot", ingot.saveOptional(registries));
+		tag.putIntArray("strikes", strikes.stream().mapToInt(Integer::intValue).toArray());
+		tag.putLong("sweep_start", sweepStart);
+		tag.putFloat("zone_center", zoneCenter);
+		tag.putBoolean("no_timing", noTiming);
 	}
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		item = input.read("item", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
-		ingot = input.read("ingot", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		item = ItemStack.parseOptional(registries, tag.getCompound("item"));
+		ingot = ItemStack.parseOptional(registries, tag.getCompound("ingot"));
 		strikes.clear();
-		for (int score : input.getIntArray("strikes").orElse(new int[0])) {
+		for (int score : tag.getIntArray("strikes")) {
 			strikes.add(score);
 		}
-		sweepStart = input.getLongOr("sweep_start", 0L);
-		zoneCenter = input.getFloatOr("zone_center", 0.5F);
-		noTiming = input.getBooleanOr("no_timing", false);
+		sweepStart = tag.getLong("sweep_start");
+		zoneCenter = tag.contains("zone_center") ? tag.getFloat("zone_center") : 0.5F;
+		noTiming = tag.getBoolean("no_timing");
 	}
 
-	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+	/** Drops the item and the ingot when the anvil is broken; ForgingAnvilBlock.onRemove calls it (1.21.1 has no preRemoveSideEffects). */
+	public void dropContents(BlockPos pos) {
 		if (level != null) {
 			if (!item.isEmpty()) {
 				Block.popResource(level, pos, item);

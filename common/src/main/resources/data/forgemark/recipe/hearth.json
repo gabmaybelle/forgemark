@@ -6,8 +6,12 @@
 		"SSS"
 	],
 	"key": {
-		"B": "minecraft:bricks",
-		"S": "minecraft:stone"
+		"B": {
+			"item": "minecraft:bricks"
+		},
+		"S": {
+			"item": "minecraft:stone"
+		}
 	},
 	"result": {
 		"id": "forgemark:hearth"

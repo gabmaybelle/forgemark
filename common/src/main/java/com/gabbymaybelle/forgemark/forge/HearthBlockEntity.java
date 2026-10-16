@@ -9,8 +9,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 /**
  * Holds one ingot and its heat. While the hearth is lit the heat climbs to 1 over the metal's
@@ -97,21 +95,21 @@ public class HearthBlockEntity extends BlockEntity {
 	}
 
 	@Override
-	protected void saveAdditional(ValueOutput output) {
-		super.saveAdditional(output);
-		output.store("ingot", ItemStack.OPTIONAL_CODEC, ingot);
-		output.putFloat("heat", heat);
+	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.saveAdditional(tag, registries);
+		tag.put("ingot", ingot.saveOptional(registries));
+		tag.putFloat("heat", heat);
 	}
 
 	@Override
-	protected void loadAdditional(ValueInput input) {
-		super.loadAdditional(input);
-		ingot = input.read("ingot", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY);
-		heat = input.getFloatOr("heat", 0.0F);
+	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+		super.loadAdditional(tag, registries);
+		ingot = ItemStack.parseOptional(registries, tag.getCompound("ingot"));
+		heat = tag.getFloat("heat");
 	}
 
-	@Override
-	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+	/** Drops the ingot when the hearth is broken; HearthBlock.onRemove calls it (1.21.1 has no preRemoveSideEffects). */
+	public void dropContents(BlockPos pos) {
 		if (level != null && !ingot.isEmpty()) {
 			Block.popResource(level, pos, takeOut());
 		}

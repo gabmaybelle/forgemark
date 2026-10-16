@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'fabric-loom' version "${loom_version}"
 }
 
 // The common sources are compiled straight into this jar (no common jar to bundle), so the
@@ -40,18 +40,20 @@ repositories {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	// 1.21.1 ships obfuscated (26.x ships Mojang names); the code is written in Mojang names and Loom remaps.
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// Jade's API, for the hearth and anvil overlay (common/.../compat/JadePlugin). Compile only:
 	// nothing is bundled, and the plugin only loads when Jade is installed.
-	compileOnly "maven.modrinth:jade:${project.jade_fabric_version}"
+	modCompileOnly "maven.modrinth:jade:${project.jade_fabric_version}"
 	// JEI and REI likewise, for the Tempering category (common/.../compat/JeiPlugin, ReiPlugin).
-	compileOnly "maven.modrinth:jei:${project.jei_fabric_version}"
-	compileOnly "maven.modrinth:rei:${project.rei_fabric_version}"
+	modCompileOnly "maven.modrinth:jei:${project.jei_fabric_version}"
+	modCompileOnly "maven.modrinth:rei:${project.rei_fabric_version}"
 	// REI's API refers to these two (architectury fluids, cloth's Point and Rectangle).
-	compileOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
-	compileOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
+	modCompileOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
+	modCompileOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
 	compileOnly "me.shedaniel.cloth:basic-math:${project.basic_math_version}"
 
 	// Compatibility runs: `./gradlew :fabric:runClientGameTest -PtestX` plays the in-game test
@@ -59,23 +61,23 @@ dependencies {
 	// gradle.properties). Nothing here is bundled or required. Planned: Beyond the Dragon
 	// Beyond the Dragon (its GitHub release, see above), Mythic Metals once it reaches 26.3, Tiered.
 	if (project.hasProperty("testJade")) {
-		runtimeOnly "maven.modrinth:jade:${project.jade_fabric_version}"
+		modRuntimeOnly "maven.modrinth:jade:${project.jade_fabric_version}"
 	}
 	if (project.hasProperty("testJei")) {
-		runtimeOnly "maven.modrinth:jei:${project.jei_fabric_version}"
+		modRuntimeOnly "maven.modrinth:jei:${project.jei_fabric_version}"
 	}
 	if (project.hasProperty("testBeyondTheDragon")) {
-		runtimeOnly "github.gabmaybelle:beyond-the-dragon-fabric:${project.beyond_the_dragon_version}"
+		modRuntimeOnly "github.gabmaybelle:beyond-the-dragon-fabric:${project.beyond_the_dragon_version}"
 	}
 	if (project.hasProperty("testEasyAnvils")) {
-		runtimeOnly "maven.modrinth:easy-anvils:${project.easy_anvils_fabric_version}"
-		runtimeOnly "maven.modrinth:puzzles-lib:${project.puzzles_lib_fabric_version}"
-		runtimeOnly "maven.modrinth:forge-config-api-port:${project.forge_config_api_port_fabric_version}"
+		modRuntimeOnly "maven.modrinth:easy-anvils:${project.easy_anvils_fabric_version}"
+		modRuntimeOnly "maven.modrinth:puzzles-lib:${project.puzzles_lib_fabric_version}"
+		modRuntimeOnly "maven.modrinth:forge-config-api-port:${project.forge_config_api_port_fabric_version}"
 	}
 	if (project.hasProperty("testRei")) {
-		runtimeOnly "maven.modrinth:rei:${project.rei_fabric_version}"
-		runtimeOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
-		runtimeOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
+		modRuntimeOnly "maven.modrinth:rei:${project.rei_fabric_version}"
+		modRuntimeOnly "maven.modrinth:architectury-api:${project.architectury_fabric_version}"
+		modRuntimeOnly "maven.modrinth:cloth-config:${project.cloth_config_fabric_version}"
 	}
 }
 
@@ -88,23 +90,41 @@ processResources {
 	}
 }
 
-tasks.named('jar') { archiveBaseName = "${rootProject.name}-fabric" }
-tasks.named('sourcesJar') { archiveBaseName = "${rootProject.name}-fabric" }
+// The remapped jar is the one that ships (classic Loom remaps to intermediary); name them all.
+base { archivesName = "${rootProject.name}-fabric" }
 
 // Client game tests: `./gradlew :fabric:runClientGameTest` starts a real game and plays through
-// the checks in src/gametest. Nothing there ships in the jar.
-fabricApi {
-	configureTests {
-		createSourceSet = true
-		modId = "forgemark_gametest"
-		enableGameTests = false
-		enableClientGameTests = true
-		eula = true
+// the checks in src/gametest. Nothing there ships in the jar. Fabric's client game test API
+// doesn't exist for 1.21.1, so the harness is the test's own (in src/gametest, as on Beyond the
+// Dragon's 1.21.1 branch) and the run is a plain client run with the test source set as a second mod.
+sourceSets {
+	gametest {
+		compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+		runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
 	}
 }
 
-// The game test opens the viewers' Tempering tab for a screenshot when one is installed. This
-// comes after configureTests, which is what creates the gametest source set.
+loom {
+	mods {
+		"forgemark_gametest" {
+			sourceSet sourceSets.gametest
+		}
+	}
+	runs {
+		clientGameTest {
+			client()
+			name = "Client Game Test"
+			source sourceSets.gametest
+			runDir "build/run/clientGameTest"
+			property "forgemark.gametest", "true"
+			// A fixed window so the screenshots are the same size on every machine.
+			programArgs "--width", "1280", "--height", "720"
+			ideConfigGenerated false
+		}
+	}
+}
+
+// The game test opens the viewers' Tempering tab for a screenshot when one is installed.
 dependencies {
 	gametestCompileOnly "maven.modrinth:jei:${project.jei_fabric_version}"
 	gametestCompileOnly "maven.modrinth:rei:${project.rei_fabric_version}"

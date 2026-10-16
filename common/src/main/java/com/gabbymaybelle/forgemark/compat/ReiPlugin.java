@@ -18,7 +18,7 @@ import me.shedaniel.rei.api.common.display.basic.BasicDisplay;
 import me.shedaniel.rei.api.common.util.EntryIngredients;
 import me.shedaniel.rei.api.common.util.EntryStacks;
 import net.minecraft.network.chat.Component;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * REI's "Tempering" tab: one display per ingot or gem, with the items it tempers, from
@@ -54,10 +54,6 @@ public class ReiPlugin implements REIClientPlugin {
 			return TEMPERING;
 		}
 
-		@Override
-		public @Nullable DisplaySerializer<? extends me.shedaniel.rei.api.common.display.Display> getSerializer() {
-			return null;
-		}
 	}
 
 	public static class Category implements DisplayCategory<Display> {

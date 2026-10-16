@@ -2,6 +2,7 @@ package com.gabbymaybelle.forgemark.forge;
 
 import com.gabbymaybelle.forgemark.ForgemarkTags;
 import com.gabbymaybelle.forgemark.quality.Quality;
+import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -9,11 +10,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -28,7 +29,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The forging anvil: holds the item being tempered and the hot ingot, and runs the strike
@@ -69,46 +70,46 @@ public class ForgingAnvilBlock extends Block implements EntityBlock {
 	}
 
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 		if (!(level.getBlockEntity(pos) instanceof ForgingAnvilBlockEntity anvil)) {
-			return InteractionResult.PASS;
+			return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (stack.is(ForgemarkTags.HAMMERS)) {
 			if (!anvil.canStrike()) {
 				if (!level.isClientSide()) {
-					player.sendOverlayMessage(Component.translatable(anvil.getItem().isEmpty() ? "forgemark.anvil.needs_item" : "forgemark.anvil.needs_ingot"));
+					player.displayClientMessage(Component.translatable(anvil.getItem().isEmpty() ? "forgemark.anvil.needs_item" : "forgemark.anvil.needs_ingot"), true);
 				}
-				return InteractionResult.SUCCESS;
+				return ItemInteractionResult.sidedSuccess(level.isClientSide());
 			}
 			// The client reports where it saw the marker; the server waits for that packet.
 			if (level.isClientSide() && clientStrike != null) {
 				clientStrike.accept(pos);
 			}
-			return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (anvil.getItem().isEmpty() && Quality.isTemperable(stack)) {
 			if (!level.isClientSide()) {
 				anvil.placeItem(stack.split(1));
 			}
-			return InteractionResult.SUCCESS;
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (!anvil.getItem().isEmpty() && anvil.getIngot().isEmpty() && Metal.isHeatable(stack)) {
-			if (!anvil.getItem().isValidRepairItem(stack)) {
+			if (!Metal.repairs(anvil.getItem(), stack)) {
 				if (!level.isClientSide()) {
-					player.sendOverlayMessage(Component.translatable("forgemark.anvil.wrong_ingot", anvil.getItem().getHoverName()));
+					player.displayClientMessage(Component.translatable("forgemark.anvil.wrong_ingot", anvil.getItem().getHoverName()), true);
 				}
-				return InteractionResult.SUCCESS;
+				return ItemInteractionResult.sidedSuccess(level.isClientSide());
 			}
 			if (!level.isClientSide()) {
 				anvil.placeIngot(stack.split(1));
 			}
-			return InteractionResult.SUCCESS;
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (anvil.getItem().isEmpty() && !stack.isEmpty() && !level.isClientSide()) {
-			player.sendOverlayMessage(Component.translatable("forgemark.anvil.not_temperable", stack.getHoverName()));
-			return InteractionResult.SUCCESS;
+			player.displayClientMessage(Component.translatable("forgemark.anvil.not_temperable", stack.getHoverName()), true);
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
-		return InteractionResult.TRY_WITH_EMPTY_HAND;
+		return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 	}
 
 	@Override
@@ -122,7 +123,16 @@ public class ForgingAnvilBlock extends Block implements EntityBlock {
 				Block.popResource(level, pos.above(), taken);
 			}
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResult.sidedSuccess(level.isClientSide());
+	}
+
+	/** Drops what the block holds when it's broken or replaced (on 1.21.1 the block does this, not its block entity). */
+	@Override
+	protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+		if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof ForgingAnvilBlockEntity entity) {
+			entity.dropContents(pos);
+		}
+		super.onRemove(state, level, pos, newState, movedByPiston);
 	}
 
 	@Override
@@ -137,8 +147,8 @@ public class ForgingAnvilBlock extends Block implements EntityBlock {
 		}
 
 		@Override
-		public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> consumer, TooltipFlag flag) {
-			consumer.accept(Component.translatable("block.forgemark.forging_anvil.desc").withStyle(ChatFormatting.GRAY));
+		public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
+			lines.add(Component.translatable("block.forgemark.forging_anvil.desc").withStyle(ChatFormatting.GRAY));
 		}
 	}
 }

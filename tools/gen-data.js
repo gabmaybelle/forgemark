@@ -7,7 +7,65 @@ const fs = require('fs');
 const path = require('path');
 const res = path.join(__dirname, '..', 'common', 'src', 'main', 'resources');
 
+// The Minecraft version the files are for. Everything below is written in the 26.3 shape and
+// converted here; this line is the only one that differs between the branches' generators.
+const FORMAT = '1.21.1';
+
+// 1.21.1's shapes: recipe ingredients as {item}/{tag} objects, loot `conditions` and `functions`
+// lists, advancement conditions as lists and backgrounds as texture paths, and item models
+// found by item id (there is no assets/<ns>/items/ definition file).
+function toFormat(rel, json) {
+	if (FORMAT === '26.3') {
+		return json;
+	}
+	if (rel.includes('/items/')) {
+		const model = json.model.model;
+		const name = rel.split('/').pop();
+		return model === 'forgemark:item/' + name.replace('.json', '') ? null : ['assets/forgemark/models/item/' + name, { parent: model }];
+	}
+	if (rel.includes('/recipe/')) {
+		const key = {};
+		for (const [k, v] of Object.entries(json.key)) {
+			key[k] = v.startsWith('#') ? { tag: v.slice(1) } : { item: v };
+		}
+		return { ...json, key };
+	}
+	if (rel.includes('/loot_table/')) {
+		// 1.21.1 also names a condition's kind with `condition` and a function's with `function`, not `type`.
+		const renamed = (key) => ({ type, ...rest }) => ({ [key]: type, ...rest });
+		return { ...json, pools: json.pools.map(({ condition, modifier, ...pool }) => ({
+			...pool,
+			...(condition ? { conditions: [condition].map(renamed('condition')) } : {}),
+			...(modifier ? { functions: modifier.map(renamed('function')) } : {}),
+		})) };
+	}
+	if (rel.includes('/advancement/')) {
+		const out = JSON.parse(JSON.stringify(json));
+		if (out.display && out.display.background) {
+			out.display.background = out.display.background.replace(':', ':textures/') + '.png';
+		}
+		for (const criterion of Object.values(out.criteria)) {
+			const location = criterion.conditions && criterion.conditions.location;
+			if (location && location.type === 'minecraft:all_of') {
+				// A list of loot conditions, each naming its kind with `condition` (as in loot tables).
+				criterion.conditions.location = location.terms.map(({ type, ...rest }) => ({ condition: type, ...rest }));
+			}
+		}
+		return out;
+	}
+	return json;
+}
+
 function write(rel, json) {
+	const converted = toFormat(rel, json);
+	if (converted === null) {
+		return;
+	}
+	if (Array.isArray(converted)) {
+		[rel, json] = converted;
+	} else {
+		json = converted;
+	}
 	const file = path.join(res, rel);
 	fs.mkdirSync(path.dirname(file), { recursive: true });
 	fs.writeFileSync(file, JSON.stringify(json, null, '\t') + '\n');

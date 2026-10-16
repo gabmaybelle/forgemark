@@ -1,7 +1,7 @@
 package com.gabbymaybelle.forgemark;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 
@@ -26,6 +26,6 @@ public final class ForgemarkTags {
 	}
 
 	private static TagKey<Item> item(String name) {
-		return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, name));
+		return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, name));
 	}
 }

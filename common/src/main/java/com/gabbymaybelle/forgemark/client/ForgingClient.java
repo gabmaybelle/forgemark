@@ -7,14 +7,14 @@ import com.gabbymaybelle.forgemark.network.StrikePayload;
 import java.util.List;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.BlockHitResult;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The strike bar: drawn over the hotbar while the player looks at a forging anvil that holds
@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
  * zone, orange narrow zone, white marker.
  */
 public final class ForgingClient {
-	public static final Identifier BAR_ID = Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, "strike_bar");
+	public static final ResourceLocation BAR_ID = ResourceLocation.fromNamespaceAndPath(Forgemark.MOD_ID, "strike_bar");
 	private static final int WIDTH = 120;
 	private static final int HEIGHT = 10;
 	private static final int BACKGROUND = 0xCC202020;
@@ -40,7 +40,7 @@ public final class ForgingClient {
 	private ForgingClient() {
 	}
 
-	public static void render(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+	public static void render(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		lastPartialTick = delta.getGameTimeDeltaPartialTick(false);
 		ForgingAnvilBlockEntity anvil = targetAnvil(minecraft);
@@ -76,7 +76,7 @@ public final class ForgingClient {
 		Component text = hot
 				? Component.translatable("forgemark.bar.strike", strikes.size() + 1, Forging.STRIKES)
 				: Component.translatable("forgemark.bar.reheat");
-		graphics.text(minecraft.font, text, (graphics.guiWidth() - minecraft.font.width(text)) / 2, y - 14, MARKER);
+		graphics.drawString(minecraft.font, text, (graphics.guiWidth() - minecraft.font.width(text)) / 2, y - 14, MARKER);
 	}
 
 	/** The press: tells the server where the marker was when the player clicked. */

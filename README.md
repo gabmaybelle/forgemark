@@ -1,7 +1,10 @@
 # Forgemark
 
-A Fabric and NeoForge mod for Minecraft 26.3. Temper the tools, weapons and armour you already
-have, from any mod, for a small quality bonus.
+A Fabric and NeoForge mod for Minecraft 26.3 and 1.21.1. Temper the tools, weapons and armour you
+already have, from any mod, for a small quality bonus.
+
+This is the Minecraft 1.21.1 version, for Fabric and NeoForge. The 26.3 version is on the `main`
+branch. Both play the same.
 
 Forgemark leaves crafting alone. Make your gear the usual way, then take it to a hearth and a
 forging anvil with one matching ingot: heat the ingot, strike it in time with the glow, and quench

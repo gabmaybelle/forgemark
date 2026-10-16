@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2+1.21.1 (2026-10-16)
+
+- Forgemark now comes for Minecraft 1.21.1 too, on Fabric and on NeoForge: the same hearth,
+  forging anvil, smithing hammer, tempers, advancements, and Jade, JEI and REI support as 0.1.2
+  on 26.3. The Fabric jar needs Fabric API 0.116.0 or newer.
+
 ## 0.1.2 (2026-10-16)
 
 - The hearth is lit on its own now, like a campfire: flint and steel or a fire charge lights it,

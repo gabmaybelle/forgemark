@@ -1,6 +1,6 @@
 # Forgemark
 
-A Fabric and NeoForge mod for Minecraft 26.3 (mod ID `forgemark`): temper the tools, weapons and
+A Fabric and NeoForge mod for Minecraft 26.3 and, on the `1.21.1` branch, 1.21.1 (mod ID `forgemark`): temper the tools, weapons and
 armour you already have, from any mod, at a hearth and forging anvil, for a small, capped quality
 bonus. Crafting is left alone; forging is an optional upgrade. The design doc with every decision
 is Gabby's Claude doc "Forgemark design" (exported as `DESIGN.md` for sessions that can't open
@@ -188,4 +188,9 @@ way gets its own issue.
 - Gabby publishes on Modrinth herself. Don't upload anything there.
 
 **Minecraft.** Fabric and NeoForge on Minecraft 26.3 (Mojang names; Loom 1.18.4, ModDevGradle
-2.0, Java 25). Vanilla names changed a lot in 26.x: check the merged jar rather than older docs.
+2.0, Java 25). The `1.21.1` branch builds for 1.21.1 instead: classic `fabric-loom` with Mojang
+mappings, NeoForge 21.1, Java 21, and its own small client game-test harness in
+`fabric/src/gametest/.../harness` (Fabric's client game test API doesn't exist for 1.21.1). On
+1.21.1 vanilla armour keeps its stats in `ArmorItem.getDefaultAttributeModifiers()`, not the item's
+attribute component, so read modifiers through `Quality.modifiers`. `tools/gen-data.js` has a
+`FORMAT` switch for the data files: '1.21.1' on that branch, '26.3' on main. Vanilla names changed a lot in 26.x: check the merged jar rather than older docs.

@@ -119,7 +119,7 @@ Three new blocks and items, one minigame and one quality system. Everything else
 
 | Piece | Kind | What it does |
 | --- | --- | --- |
-| Hearth | Block | Sits over a campfire, lava or magma and heats a matching ingot; glows as it heats |
+| Hearth | Block | Lit like a campfire (flint and steel or a fire charge; a shovel puts it out) and heats a matching ingot; glows as it heats |
 | Forging anvil | Block | Holds the item and hot ingot; runs the minigame. Separate from the vanilla anvil |
 | Smithing hammer | Item | Strikes the anvil; wears with use like any tool |
 | Water quench | Vanilla cauldron | Finishes the item and sets its quality |
@@ -157,7 +157,7 @@ Modern Minecraft stores an item's stats on the item itself, which is what makes 
 
 ## Open questions
 
-- [x] Heat source: the hearth sits over a campfire, lava or magma; no fuel cost
+- [x] Heat source: the hearth is lit on its own, like a campfire (changed 2026-10-16 from "sits over a campfire, lava or magma"); no fuel cost
 - [x] Strikes: five per temper, usually one reheat
 - [x] Re-tempering keeps the better result
 - [x] Caps: +10% mining speed and damage, +0.5 flat toughness for armour

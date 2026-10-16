@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The hearth is lit on its own now, like a campfire: flint and steel or a fire charge lights it,
+  and a shovel puts it out. It no longer needs a campfire, lava or magma underneath, so it fits
+  neatly into any smithy. Hearths that were already lit in a world stay lit.
+
 ## 0.1.1 (2026-10-16)
 
 - New art for everything Forgemark adds, drawn to sit beside vanilla's blocks and tools:

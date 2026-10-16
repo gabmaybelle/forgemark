@@ -13,8 +13,8 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 /**
- * Holds one ingot and its heat. With a heat source under the block the heat climbs to 1 over
- * the metal's heat time; without one it falls. Clients get the heat for the glow whenever it
+ * Holds one ingot and its heat. While the hearth is lit the heat climbs to 1 over the metal's
+ * heat time; while it's out the heat falls. Clients get the heat for the glow whenever it
  * crosses a tenth, not every tick.
  */
 public class HearthBlockEntity extends BlockEntity {
@@ -65,11 +65,7 @@ public class HearthBlockEntity extends BlockEntity {
 		if (level == null) {
 			return;
 		}
-		boolean lit = HearthBlock.hasHeatSource(level, getBlockPos());
-		BlockState state = getBlockState();
-		if (state.getValue(HearthBlock.LIT) != lit) {
-			level.setBlock(getBlockPos(), state.setValue(HearthBlock.LIT, lit), Block.UPDATE_ALL);
-		}
+		boolean lit = getBlockState().getValue(HearthBlock.LIT);
 		if (ingot.isEmpty()) {
 			return;
 		}

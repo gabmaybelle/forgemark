@@ -15,7 +15,8 @@ add-ons: the hearth knows a metal by its name.
 
 ## How to forge
 
-1. **Hearth.** Craft one from bricks and stone and set it over a lit campfire, lava or magma.
+1. **Hearth.** Craft one from bricks and stone and light it with flint and steel or a fire charge,
+   like a campfire (a shovel puts it out).
    Right-click it with the ingot that repairs your gear (iron for iron, diamond for diamond, and
    so on for any mod's metal). It glows brighter as it heats: about 10 seconds for iron, 6 for
    gold or copper, 20 for netherite or diamond. Right-click with an empty hand to take it out.

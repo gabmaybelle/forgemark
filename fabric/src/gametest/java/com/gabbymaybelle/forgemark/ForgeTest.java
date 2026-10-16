@@ -36,7 +36,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The forge in a real world: the hearth over a campfire, the anvil, the hammer, the strikes
+ * The forge in a real world: the hearth lit with flint and steel, the anvil, the hammer, the strikes
  * (decided on the server), the quench in a cauldron, and the settings around them. Called from
  * {@link ForgemarkClientTest}; the {@code check} it's given collects failures there.
  */
@@ -60,7 +60,7 @@ final class ForgeTest {
 			hearthPos = base.offset(2, 0, 3);
 			anvilPos = base.offset(0, 0, 3);
 			cauldronPos = base.offset(-2, 0, 3);
-			level.setBlock(hearthPos.below(), Blocks.CAMPFIRE.defaultBlockState(), 3);
+			level.setBlock(hearthPos.below(), Blocks.STONE.defaultBlockState(), 3);
 			level.setBlock(hearthPos, ForgemarkBlocks.HEARTH.get().defaultBlockState(), 3);
 			level.setBlock(anvilPos.below(), Blocks.STONE.defaultBlockState(), 3);
 			level.setBlock(anvilPos, ForgemarkBlocks.FORGING_ANVIL.get().defaultBlockState(), 3);
@@ -124,6 +124,11 @@ final class ForgeTest {
 		return hearth.takeOut();
 	}
 
+	/** A right-click on the top of a block with whatever the player holds, as the game does it. */
+	private static void click(ServerLevel level, ServerPlayer player, BlockPos pos) {
+		player.gameMode.useItemOn(player, level, player.getMainHandItem(), InteractionHand.MAIN_HAND, new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
+	}
+
 	/** Whether the player has one of Forgemark's advancements. */
 	private static boolean done(ServerPlayer player, String name) {
 		return player.getAdvancements().getOrStartProgress(player.level().getServer().getAdvancements().get(Identifier.fromNamespaceAndPath(Forgemark.MOD_ID, name))).isDone();
@@ -132,7 +137,13 @@ final class ForgeTest {
 	private void hearth(ServerLevel level, ServerPlayer player) {
 		HearthBlockEntity hearth = hearth(level, hearthPos);
 		hearth.serverTick();
-		check.accept(level.getBlockState(hearthPos).getValue(HearthBlock.LIT), "a hearth over a lit campfire is lit");
+		check.accept(!level.getBlockState(hearthPos).getValue(HearthBlock.LIT), "a new hearth starts out");
+		// Lit like a campfire, with a real right-click.
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FLINT_AND_STEEL));
+		click(level, player, hearthPos);
+		check.accept(level.getBlockState(hearthPos).getValue(HearthBlock.LIT) && player.getMainHandItem().getDamageValue() == 1,
+				"flint and steel lights it, for one use of the flint (damage " + player.getMainHandItem().getDamageValue() + ")");
+		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		hearth.insert(new ItemStack(Items.IRON_INGOT));
 		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS / 2; i++) {
 			hearth.serverTick();
@@ -161,22 +172,28 @@ final class ForgeTest {
 		hearth.takeOut();
 
 		BlockPos cold = hearthPos.offset(0, 0, 4);
-		level.setBlock(cold.below(), Blocks.STONE.defaultBlockState(), 3);
+		// A fire underneath does nothing any more: the hearth is lit on its own or not at all.
+		level.setBlock(cold.below(), Blocks.CAMPFIRE.defaultBlockState(), 3);
 		level.setBlock(cold, ForgemarkBlocks.HEARTH.get().defaultBlockState(), 3);
 		HearthBlockEntity coldHearth = hearth(level, cold);
 		coldHearth.insert(new ItemStack(Items.IRON_INGOT));
 		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
 			coldHearth.serverTick();
 		}
-		check.accept(!level.getBlockState(cold).getValue(HearthBlock.LIT) && coldHearth.getHeat() == 0.0F, "a hearth with nothing under it stays cold");
-		level.setBlock(cold.below(), Blocks.MAGMA_BLOCK.defaultBlockState(), 3);
+		check.accept(!level.getBlockState(cold).getValue(HearthBlock.LIT) && coldHearth.getHeat() == 0.0F, "an unlit hearth stays cold, even over a campfire");
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.FIRE_CHARGE, 2));
+		click(level, player, cold);
+		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT) && player.getMainHandItem().getCount() == 1, "a fire charge lights it too, and is used up");
 		coldHearth.serverTick();
-		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT), "magma under it lights it");
-		level.setBlock(cold.below(), Blocks.LAVA.defaultBlockState(), 3);
+		check.accept(coldHearth.getHeat() > 0.0F, "once lit, the ingot in it starts to heat");
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SHOVEL));
+		click(level, player, cold);
+		check.accept(!level.getBlockState(cold).getValue(HearthBlock.LIT) && player.getMainHandItem().getDamageValue() == 1, "a shovel puts it out, like a campfire");
+		float warm = coldHearth.getHeat();
 		coldHearth.serverTick();
-		check.accept(level.getBlockState(cold).getValue(HearthBlock.LIT), "so does lava");
+		check.accept(coldHearth.getHeat() < warm, "and out, the ingot cools");
+		player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 		level.setBlock(cold.below(), Blocks.STONE.defaultBlockState(), 3);
-		coldHearth.serverTick(); // notices the stone and goes out
 		coldHearth.takeOut();
 		check.accept(!Metal.isHeatable(new ItemStack(Items.STICK)) && !Metal.isHeatable(new ItemStack(Items.LEATHER)) && Metal.isHeatable(new ItemStack(Items.DIAMOND)),
 				"the hearth takes ingots and gems, not sticks or leather");

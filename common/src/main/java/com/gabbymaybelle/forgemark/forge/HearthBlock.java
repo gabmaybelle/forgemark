@@ -7,20 +7,18 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -29,13 +27,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The hearth: sits over a campfire, lava or magma and heats one ingot to forging heat. Right
- * click with an ingot to put it in, with an empty hand to take it out. {@code lit} is whether
- * there's a heat source under it; the ingot's glow is the block entity's business.
+ * The hearth: lit like a campfire, it heats one ingot to forging heat. Flint and steel or a fire
+ * charge lights it, a shovel puts it out, and it stays as it was left. Right click with an ingot
+ * to put it in, with an empty hand to take it out. The ingot's glow is the block entity's business.
  */
 public class HearthBlock extends Block implements EntityBlock {
 	public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -50,18 +49,36 @@ public class HearthBlock extends Block implements EntityBlock {
 		builder.add(LIT);
 	}
 
-	/** A lit campfire, lava, magma or fire directly underneath. */
-	public static boolean hasHeatSource(Level level, BlockPos pos) {
-		BlockPos below = pos.below();
-		BlockState state = level.getBlockState(below);
-		if (state.is(BlockTags.CAMPFIRES)) {
-			return CampfireBlock.isLitCampfire(state);
-		}
-		return state.is(Blocks.MAGMA_BLOCK) || state.is(BlockTags.FIRE) || level.getFluidState(below).is(FluidTags.LAVA);
-	}
-
 	@Override
 	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+		// Lit and put out the way a campfire is: flint and steel or a fire charge, then a shovel.
+		if (!state.getValue(LIT) && stack.is(ItemTags.CREEPER_IGNITERS)) {
+			if (!level.isClientSide()) {
+				level.setBlock(pos, state.setValue(LIT, true), Block.UPDATE_ALL);
+				boolean charge = stack.is(Items.FIRE_CHARGE);
+				level.playSound(null, pos, charge ? SoundEvents.FIRECHARGE_USE : SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, level.getRandom().nextFloat() * 0.4F + 0.8F);
+				level.gameEvent(player, GameEvent.BLOCK_CHANGE, pos);
+				if (charge) {
+					stack.consume(1, player);
+				} else {
+					stack.hurtAndBreak(1, player, hand.asEquipmentSlot());
+				}
+			}
+			return InteractionResult.SUCCESS;
+		}
+		if (state.getValue(LIT) && stack.is(ItemTags.SHOVELS)) {
+			if (!level.isClientSide()) {
+				level.setBlock(pos, state.setValue(LIT, false), Block.UPDATE_ALL);
+				level.playSound(null, pos, SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.BLOCKS, 1.0F, 1.0F);
+				level.gameEvent(player, GameEvent.BLOCK_CHANGE, pos);
+				stack.hurtAndBreak(1, player, hand.asEquipmentSlot());
+			} else {
+				for (int i = 0; i < 12; i++) {
+					level.addParticle(ParticleTypes.SMOKE, pos.getX() + 0.3 + level.getRandom().nextDouble() * 0.4, pos.getY() + 1.02, pos.getZ() + 0.3 + level.getRandom().nextDouble() * 0.4, 0, 0.05, 0);
+				}
+			}
+			return InteractionResult.SUCCESS;
+		}
 		if (!(level.getBlockEntity(pos) instanceof HearthBlockEntity hearth) || !Metal.isHeatable(stack) || !hearth.getIngot().isEmpty()) {
 			return InteractionResult.TRY_WITH_EMPTY_HAND;
 		}

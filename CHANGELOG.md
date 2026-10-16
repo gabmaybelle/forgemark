@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 (2026-10-16)
 
 - The hearth is lit on its own now, like a campfire: flint and steel or a fire charge lights it,
   and a shovel puts it out. It no longer needs a campfire, lava or magma underneath, so it fits

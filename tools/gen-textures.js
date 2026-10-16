@@ -224,6 +224,9 @@ const textures = {
 		});
 	})(),
 };
+// The lit hearth (a fire underneath) has its own top and sides; without art they look like the cold ones.
+textures['block/hearth_side_lit'] = textures['block/hearth_side'];
+textures['block/hearth_top_lit'] = textures['block/hearth_top'];
 
 for (const [name, pixels] of Object.entries(textures)) {
 	const own = path.join(art, name.replace('/', path.sep) + '.png');
@@ -232,6 +235,8 @@ for (const [name, pixels] of Object.entries(textures)) {
 		fs.mkdirSync(path.dirname(target), { recursive: true });
 		fs.copyFileSync(own, target);
 		console.log('art/        ' + name);
+		// The icon below draws whatever hammer the game uses, so it follows Gabby's.
+		textures[name] = readPng(own);
 		continue;
 	}
 	writePng(target, pixels);

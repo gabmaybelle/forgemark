@@ -1,0 +1,8 @@
+{
+	"parent": "minecraft:block/cube_bottom_top",
+	"textures": {
+		"top": "forgemark:block/hearth_top_lit",
+		"side": "forgemark:block/hearth_side_lit",
+		"bottom": "forgemark:block/hearth_bottom"
+	}
+}

@@ -36,8 +36,7 @@ The advancements screen has a Forgemark tab that walks you through these steps. 
 With [JEI](https://modrinth.com/mod/jei) or [REI](https://modrinth.com/mod/rei), a Tempering tab
 shows which ingot tempers what.
 
-**It's an early release.** The forge works in singleplayer and on servers, and the look is
-placeholder art until the real textures land. Jars are on the
+**It's an early release.** The forge works in singleplayer and on servers. Jars are on the
 [releases page](https://github.com/gabmaybelle/forgemark/releases); the Fabric one needs Fabric API.
 
 ## Building

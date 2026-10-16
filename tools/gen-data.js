@@ -35,8 +35,11 @@ write('data/forgemark/tags/item/hard_metal.json', {
 
 // Blocks and items: states, models, item definitions, loot, recipes.
 const hearthModel = { parent: 'minecraft:block/cube_bottom_top', textures: { top: 'forgemark:block/hearth_top', side: 'forgemark:block/hearth_side', bottom: 'forgemark:block/hearth_bottom' } };
-write('assets/forgemark/blockstates/hearth.json', { variants: { 'lit=false': { model: 'forgemark:block/hearth' }, 'lit=true': { model: 'forgemark:block/hearth' } } });
+// Lit (a fire under it): the coals and the mouth glow.
+const hearthLitModel = { parent: 'minecraft:block/cube_bottom_top', textures: { top: 'forgemark:block/hearth_top_lit', side: 'forgemark:block/hearth_side_lit', bottom: 'forgemark:block/hearth_bottom' } };
+write('assets/forgemark/blockstates/hearth.json', { variants: { 'lit=false': { model: 'forgemark:block/hearth' }, 'lit=true': { model: 'forgemark:block/hearth_lit' } } });
 write('assets/forgemark/models/block/hearth.json', hearthModel);
+write('assets/forgemark/models/block/hearth_lit.json', hearthLitModel);
 write('assets/forgemark/items/hearth.json', { model: { type: 'minecraft:model', model: 'forgemark:block/hearth' } });
 
 const anvilVariants = {};

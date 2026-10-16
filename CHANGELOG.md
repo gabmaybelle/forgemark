@@ -2,8 +2,13 @@
 
 ## Unreleased
 
-- A new mod icon, the same one as on the mod's store pages: the smithing hammer over a warm forge
-  glow, with sparks flying off its head.
+- New art for everything Forgemark adds, drawn to sit beside vanilla's blocks and tools:
+  - the smithing hammer, an iron hammer drawn the way vanilla draws its tools;
+  - the hearth, a little brick forge on a stone base with an arched mouth and a bed of coals;
+  - the hearth now glows while a fire burns under it: its coals and mouth light up;
+  - the forging anvil, in darker blue steel, with a worn striking patch and a hardy hole on its face.
+- A new mod icon, the same one as on the mod's store pages: the new smithing hammer over a warm
+  forge glow, with sparks flying off its head.
 
 ## 0.1.0 (2026-10-15)
 

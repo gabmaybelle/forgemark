@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-10-16)
 
 - New art for everything Forgemark adds, drawn to sit beside vanilla's blocks and tools:
   - the smithing hammer, an iron hammer drawn the way vanilla draws its tools;

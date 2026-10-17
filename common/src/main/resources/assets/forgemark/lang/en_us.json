@@ -22,7 +22,7 @@
 	"forgemark.anvil.needs_ingot": "Add a hot ingot that repairs it",
 	"forgemark.anvil.wrong_ingot": "That doesn't repair %s",
 	"forgemark.anvil.not_temperable": "%s can't be tempered",
-	"forgemark.anvil.reheat": "The ingot has gone dim. Heat it again.",
+	"forgemark.anvil.reheat": "This heat is spent. Heat the ingot again.",
 	"forgemark.anvil.no_timing_ingots": "Skipping the timing costs %s ingots in all",
 	"forgemark.anvil.forged": "%s is now %s. Quench it in water, or let it cool.",
 	"forgemark.anvil.kept": "%s keeps its %s temper: this one came out worse",

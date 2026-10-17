@@ -25,7 +25,7 @@ One temper takes one matching ingot and five strikes, usually with one reheat, t
 
 &#91;embedded content: forging loop · 4 steps, 2 loops\]
 
-Each strike cools the metal; when it dims, it goes back to the hearth. A missed strike lowers the final tier but never ruins the item.
+Each heat gives a set number of strikes (iron 3, gold 2, hard metals 4) while the metal still glows; then it goes back to the hearth. A missed strike lowers the final tier but never ruins the item.
 
 ## Quality tiers
 

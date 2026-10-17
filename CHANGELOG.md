@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4 (2026-10-16)
+
+- **Each heat now gives the strikes it promises:** three for iron, two for gold, four for
+  netherite and other hard metals, as long as the ingot still glows (about 18 seconds out of
+  the hearth). Before, every strike also took a share of the heat on top of the ingot cooling,
+  so iron usually gave only two and a temper needed two reheats instead of one. Strikes no longer
+  cool the ingot; it cools with time, as it always has.
+- When a heat is used up, the anvil says so and asks for a reheat, glowing or not.
+
 ## 0.1.2 (2026-10-16)
 
 - The hearth is lit on its own now, like a campfire: flint and steel or a fire charge lights it,

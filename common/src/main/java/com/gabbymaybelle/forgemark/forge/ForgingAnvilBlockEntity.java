@@ -76,13 +76,14 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 		return Heat.now(ingot, gameTime);
 	}
 
-	/** The heat one strike uses up. */
-	public float strikeCost() {
-		return ingot.isEmpty() ? 1.0F : 1.0F / Metal.strikesPerHeat(ingot);
+	/** Strikes left in the ingot's current heat: the metal's strikes per heat, less those used. */
+	public int strikesLeftThisHeat() {
+		return ingot.isEmpty() ? 0 : Math.max(0, Metal.strikesPerHeat(ingot) - Heat.strikesUsed(ingot));
 	}
 
+	/** Whether the ingot can take a strike: it still glows and its heat has strikes left. */
 	public boolean isHotEnough(long gameTime) {
-		return ingotHeat(gameTime) >= strikeCost() - 0.001F;
+		return ingotHeat(gameTime) >= Heat.GLOWING && strikesLeftThisHeat() > 0;
 	}
 
 	public void placeItem(ItemStack stack) {
@@ -157,9 +158,7 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 			return;
 		}
 		long now = level.getGameTime();
-		float heat = ingotHeat(now);
-		float cost = strikeCost();
-		if (heat < cost - 0.001F) {
+		if (!isHotEnough(now)) {
 			player.displayClientMessage(Component.translatable("forgemark.anvil.reheat"), true);
 			level.playSound(null, getBlockPos(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.3F, 0.5F);
 			return;
@@ -178,7 +177,7 @@ public class ForgingAnvilBlockEntity extends BlockEntity {
 			score = Forging.score(position, zoneCenter);
 		}
 		strikes.add(score);
-		Heat.put(ingot, heat - cost, now);
+		Heat.struck(ingot);
 		hammer.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
 		level.playSound(null, getBlockPos(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.8F, 0.8F + score * 0.2F);
 		if (level instanceof ServerLevel serverLevel) {

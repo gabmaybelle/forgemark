@@ -3,6 +3,7 @@ package com.gabbymaybelle.forgemark.client;
 import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlock;
 import com.gabbymaybelle.forgemark.forge.ForgingAnvilBlockEntity;
 import com.gabbymaybelle.forgemark.forge.HearthBlockEntity;
+import com.gabbymaybelle.forgemark.forge.Heat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.LightTexture;
@@ -29,7 +30,7 @@ public final class ForgeRenderers {
 
 	/** Full light once the ingot is hot enough to glow, the block's own light otherwise. */
 	private static int glow(float heat, int blockLight) {
-		return heat >= 0.4F ? LightTexture.FULL_BRIGHT : blockLight;
+		return heat >= Heat.GLOWING ? LightTexture.FULL_BRIGHT : blockLight;
 	}
 
 	private static void draw(ItemRenderer items, ItemStack stack, int light, PoseStack poseStack, MultiBufferSource buffers, @Nullable Level level, int seed) {

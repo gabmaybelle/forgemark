@@ -69,6 +69,7 @@ final class ForgeTest {
 			check.accept(!done(player, "root") && !done(player, "into_the_fire") && !done(player, "tempered"), "the advancement trail starts empty");
 			hearth(level, player);
 			anvil(level, player);
+			strikesPerHeat(level, player);
 			settings(level, player);
 			beyondTheDragon(level, player);
 			// Leave a session running for the screenshot and the reopen: item and hot ingot on the anvil, two strikes in.
@@ -112,6 +113,85 @@ final class ForgeTest {
 
 	private ForgingAnvilBlockEntity anvil(ServerLevel level) {
 		return (ForgingAnvilBlockEntity) level.getBlockEntity(anvilPos);
+	}
+
+	/**
+	 * Strikes per heat with time passing as in play: the ingot cools while the marker sweeps, so
+	 * each strike here comes two seconds (one full sweep) after the last. A heat gives the metal's
+	 * count (iron 3, gold 2, netherite 4) while the ingot glows, and a trip to the hearth starts a
+	 * new count. Before 0.1.4 each strike took its share of the heat on top of the cooling, so iron
+	 * gave only two.
+	 */
+	private void strikesPerHeat(ServerLevel level, ServerPlayer player) {
+		ForgingAnvilBlockEntity anvil = anvil(level);
+		player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ForgemarkBlocks.SMITHING_HAMMER.get()));
+		Object[][] metals = { { Items.IRON_SWORD, Items.IRON_INGOT, 3 }, { Items.GOLDEN_SWORD, Items.GOLD_INGOT, 2 }, { Items.NETHERITE_SWORD, Items.NETHERITE_INGOT, 4 } };
+		for (Object[] metal : metals) {
+			net.minecraft.world.item.Item ingot = (net.minecraft.world.item.Item) metal[1];
+			int perHeat = (int) metal[2];
+			anvil.placeItem(new ItemStack((net.minecraft.world.item.Item) metal[0]));
+			anvil.placeIngot(hotIngot(level, ingot));
+			for (int i = 0; i < perHeat; i++) {
+				cool(anvil, 40);
+				aim(level, anvil);
+				anvil.strike(player, anvil.getZoneCenter());
+			}
+			check.accept(anvil.getStrikes().size() == perHeat, ingot + ": a heat gives " + perHeat + " strikes, two seconds apart (got " + anvil.getStrikes().size() + ")");
+			cool(anvil, 40);
+			aim(level, anvil);
+			anvil.strike(player, anvil.getZoneCenter());
+			check.accept(anvil.getStrikes().size() == perHeat, ingot + ": the next strike is refused until it's reheated");
+			anvil.takeItem();
+			anvil.takeIngot();
+		}
+
+		// The glow is the limit: an iron ingot 17 seconds out of the hearth can be struck, one 20 seconds out can't.
+		anvil.placeItem(new ItemStack(Items.IRON_SWORD));
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		cool(anvil, 400);
+		aim(level, anvil);
+		anvil.strike(player, anvil.getZoneCenter());
+		check.accept(anvil.getStrikes().isEmpty(), "an ingot that has stopped glowing (20 seconds out) can't be struck");
+		anvil.takeIngot();
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		cool(anvil, 340);
+		aim(level, anvil);
+		anvil.strike(player, anvil.getZoneCenter());
+		check.accept(anvil.getStrikes().size() == 1, "an ingot that still glows (17 seconds out) can");
+
+		// A trip to the hearth starts a new count, and the strikes on the anvil are kept: two strikes
+		// from a fresh heat (three made in all), then back to the hearth.
+		anvil.takeIngot();
+		anvil.placeIngot(hotIngot(level, Items.IRON_INGOT));
+		for (int i = 0; i < 2; i++) {
+			cool(anvil, 40);
+			aim(level, anvil);
+			anvil.strike(player, anvil.getZoneCenter());
+		}
+		check.accept(anvil.getStrikes().size() == 3 && Heat.strikesUsed(anvil.getIngot()) == 2 && anvil.strikesLeftThisHeat() == 1,
+				"two strikes from a fresh heat leave one (got " + anvil.getStrikes().size() + " made, " + anvil.strikesLeftThisHeat() + " left)");
+		HearthBlockEntity hearth = hearth(level, hearthPos);
+		hearth.insert(anvil.takeIngot());
+		for (int i = 0; i < Metal.DEFAULT_HEAT_TICKS; i++) {
+			hearth.serverTick();
+		}
+		anvil.placeIngot(hearth.takeOut());
+		check.accept(anvil.getStrikes().size() == 3 && Heat.strikesUsed(anvil.getIngot()) == 0 && anvil.strikesLeftThisHeat() == 3,
+				"reheating gives a fresh three strikes and keeps the three made");
+		anvil.takeItem();
+		anvil.takeIngot();
+
+		// An ingot saved before 0.1.4 has no strike count: it reads as none used.
+		Heat old = Heat.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("{\"heat\":0.9,\"at\":5}")).getOrThrow();
+		check.accept(old.heat() == 0.9F && old.at() == 5L && old.strikes() == 0, "an ingot heated before the strike count reads as no strikes used");
+	}
+
+	/** Moves the ingot on the anvil this many ticks further from the hearth: it cools as if the time had passed. */
+	private static void cool(ForgingAnvilBlockEntity anvil, int ticks) {
+		Heat heat = Heat.on(anvil.getIngot());
+		if (heat != null) {
+			anvil.getIngot().set(Heat.type(), new Heat(heat.heat(), heat.at() - ticks, heat.strikes()));
+		}
 	}
 
 	/** An ingot straight from a hot hearth. */

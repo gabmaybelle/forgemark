@@ -27,8 +27,9 @@ add-ons: the hearth knows a metal by its name.
    it down, then with the hot ingot.
 3. **Strike.** Hold a smithing hammer and look at the anvil: a marker sweeps along a bar. Right-
    click when it's in the blue zone for a good strike, in the orange centre for a perfect one.
-   Five strikes make a temper. Each strike cools the ingot; when it dims, take it back to the
-   hearth (your strikes are kept) and bring it back hot.
+   Five strikes make a temper. Each heat gives three strikes for iron (two for gold, four for
+   netherite) while the ingot still glows; then take it back to the hearth (your strikes are
+   kept) and bring it back hot.
 4. **Quench.** Right-click a water cauldron with the finished piece while it still glows for a
    water quench: a little durability traded for a little more edge. Or let it cool as it is.
 
